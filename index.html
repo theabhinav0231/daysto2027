@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Days to 2027 — a quiet IST countdown with calendar, pomodoro focus timer and work to-do.">
+  <meta name="theme-color" content="#A9D6F1">
+  <title>Days to 2027</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%234C9EE0'/%3E%3Cstop offset='1' stop-color='%2310304C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='28' y='42' font-family='Arial,sans-serif' font-size='27' font-weight='bold' fill='%23FFFFFF' text-anchor='middle'%3E27%3C/text%3E%3Cpath d='M49 8 L51 13.5 L56.5 15.5 L51 17.5 L49 23 L47 17.5 L41.5 15.5 L47 13.5 Z' fill='%23FFD24D'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <div class="grain"></div>
+    <svg class="lights" viewBox="0 0 780 210" aria-hidden="true">
+      <path class="wire" d="M56,-4 Q160,150 300,2" fill="none"/>
+      <path class="wire" d="M300,2 Q420,150 540,2" fill="none"/>
+      <path class="wire" d="M56,-4 Q300,240 540,2" fill="none"/>
+      <path class="wire" d="M540,2 Q650,150 760,2" fill="none"/>
+      <path class="wire" d="M300,2 Q530,270 760,2" fill="none"/>
+    </svg>
+  </div>
+
+  <div class="snow" aria-hidden="true">
+    <i style="--d:12s;   --delay:-2s;   --size:4px; --drift:34px; --left:6%;  --o:.85"></i>
+    <i style="--d:15s;   --delay:-7s;   --size:3px; --drift:48px; --left:18%; --o:.6"></i>
+    <i style="--d:10s;   --delay:-1s;   --size:5px; --drift:26px; --left:30%; --o:.9"></i>
+    <i style="--d:13s;   --delay:-9s;   --size:4px; --drift:52px; --left:41%; --o:.7"></i>
+    <i style="--d:16s;   --delay:-4s;   --size:3px; --drift:40px; --left:52%; --o:.55"></i>
+    <i style="--d:11s;   --delay:-6s;   --size:6px; --drift:30px; --left:63%; --o:.8"></i>
+    <i style="--d:14s;   --delay:-12s;  --size:4px; --drift:56px; --left:74%; --o:.65"></i>
+    <i style="--d:9s;    --delay:-3s;   --size:3px; --drift:36px; --left:85%; --o:.75"></i>
+    <i style="--d:12.5s; --delay:-8s;   --size:4px; --drift:44px; --left:12%; --o:.8"></i>
+    <i style="--d:15.5s; --delay:-14s;  --size:5px; --drift:60px; --left:47%; --o:.7"></i>
+    <i style="--d:10.5s; --delay:-5s;   --size:3px; --drift:28px; --left:69%; --o:.85"></i>
+    <i style="--d:13.5s; --delay:-11s;  --size:4px; --drift:50px; --left:90%; --o:.6"></i>
+    <i style="--d:11.5s; --delay:-1.5s; --size:5px; --drift:38px; --left:25%; --o:.75"></i>
+    <i style="--d:14.5s; --delay:-10s;  --size:3px; --drift:46px; --left:58%; --o:.65"></i>
+    <i style="--d:10s;   --delay:-6.5s; --size:4px; --drift:32px; --left:9%;  --o:.8"></i>
+    <i style="--d:13s;   --delay:-3.5s; --size:3px; --drift:42px; --left:22%; --o:.7"></i>
+    <i style="--d:11s;   --delay:-9.5s; --size:5px; --drift:54px; --left:35%; --o:.85"></i>
+    <i style="--d:15s;   --delay:-1.8s; --size:3px; --drift:36px; --left:44%; --o:.6"></i>
+    <i style="--d:12s;   --delay:-13s;  --size:4px; --drift:50px; --left:56%; --o:.75"></i>
+    <i style="--d:16.5s; --delay:-6s;   --size:3px; --drift:44px; --left:67%; --o:.7"></i>
+    <i style="--d:9.5s;  --delay:-4.2s; --size:5px; --drift:58px; --left:78%; --o:.9"></i>
+    <i style="--d:14s;   --delay:-8.8s; --size:4px; --drift:34px; --left:93%; --o:.7"></i>
+    <i style="--d:10.5s; --delay:-12.5s;--size:3px; --drift:30px; --left:15%; --o:.8"></i>
+    <i style="--d:12.8s; --delay:-5.5s; --size:4px; --drift:46px; --left:82%; --o:.8"></i>
+    <i style="--d:14.8s; --delay:-9s;   --size:3px; --drift:40px; --left:50%; --o:.65"></i>
+    <i style="--d:11.8s; --delay:-15s;  --size:4px; --drift:52px; --left:38%; --o:.8"></i>
+    <i style="--d:13.2s; --delay:-0.5s; --size:5px; --drift:36px; --left:73%; --o:.75"></i>
+    <i style="--d:15.2s; --delay:-11.2s;--size:3px; --drift:48px; --left:29%; --o:.7"></i>
+  </div>
+
+  <button class="music-btn" id="musicBtn" aria-label="Play Claude FM" title="Claude FM — ambient radio" aria-pressed="false"></button>
+
+  <div class="page">
+    <header class="masthead">
+      <h1 class="site-title">Days to <span class="shine">2027<i class="sp sp1" aria-hidden="true"></i><i class="sp sp2" aria-hidden="true"></i><i class="sp sp3" aria-hidden="true"></i><i class="sp sp4" aria-hidden="true"></i><i class="sp sp5" aria-hidden="true"></i><i class="sp sp6" aria-hidden="true"></i></span></h1>
+      <p class="now-line" id="nowLine">&nbsp;</p>
+    </header>
+
+    <main class="mid">
+      <section class="countdown-zone" aria-label="Countdown to 2027">
+        <div class="countdown">
+          <div class="unit" data-unit="days">
+            <div class="digits" id="cdDays"></div>
+            <div class="unit-label">Days</div>
+          </div>
+          <div class="sep" aria-hidden="true"></div>
+          <div class="unit" data-unit="hours">
+            <div class="digits" id="cdHours"></div>
+            <div class="unit-label">Hours</div>
+          </div>
+          <div class="sep" aria-hidden="true"></div>
+          <div class="unit" data-unit="minutes">
+            <div class="digits" id="cdMins"></div>
+            <div class="unit-label">Minutes</div>
+          </div>
+          <div class="sep" aria-hidden="true"></div>
+          <div class="unit" data-unit="seconds">
+            <div class="digits" id="cdSecs"></div>
+            <div class="unit-label">Seconds</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass card-calendar" aria-label="Calendar">
+        <div class="cal-head">
+          <button class="cal-nav" id="calPrev" aria-label="Previous month">&lsaquo;</button>
+          <h2 class="cal-title" id="calTitle">&nbsp;</h2>
+          <button class="cal-nav" id="calNext" aria-label="Next month">&rsaquo;</button>
+        </div>
+        <div class="cal-body">
+          <div class="cal-grid cal-weekdays" aria-hidden="true">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          </div>
+          <div class="cal-grid" id="calDays"></div>
+        </div>
+      </section>
+
+      <section class="glass card-pomodoro" aria-label="Pomodoro timer" id="pomoCard">
+        <p class="panel-label">Pomodoro</p>
+        <div class="pomo-main">
+          <div class="pomo-timer">
+            <div class="pomo-display" id="pomoDisplay"></div>
+            <button class="dd-chevron" id="pomoDD" aria-label="Choose session length" aria-haspopup="true" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="dd-menu" id="pomoMenu" hidden>
+              <button type="button" class="dd-option" data-min="30">30 min</button>
+              <button type="button" class="dd-option" data-min="60">60 min</button>
+              <button type="button" class="dd-option" data-min="90">90 min</button>
+              <button type="button" class="dd-option" data-min="120">120 min</button>
+              <button type="button" class="dd-option" data-min="180">180 min</button>
+            </div>
+          </div>
+          <button class="play-btn" id="pomoPlay" aria-label="Start timer"></button>
+        </div>
+        <p class="pomo-note" id="pomoNote" role="status" aria-live="polite"></p>
+        <div class="pomo-foot">
+          <p class="foot-label">Focused this year</p>
+          <p class="foot-value"><span id="focusTotal">0 hrs</span><span class="foot-sessions" id="focusSessions"></span></p>
+        </div>
+      </section>
+
+      <section class="glass card-todo" aria-label="Work to-do list">
+        <p class="panel-label">Work to-do</p>
+        <form class="todo-form" id="todoForm">
+          <input type="text" id="todoInput" placeholder="Add a task…" autocomplete="off" maxlength="200" aria-label="New task">
+          <button type="submit" class="enter-btn" aria-label="Add task">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 5v6a4 4 0 0 1-4 4H5"/><path d="M9 11l-4 4 4 4"/></svg>
+          </button>
+        </form>
+        <div class="todo-scroll" id="todoScroll">
+          <ul class="todo-list" id="todoList"></ul>
+          <p class="todo-empty" id="todoEmpty">Nothing here yet — add your first task.</p>
+        </div>
+        <p class="todo-count" id="todoCount">&nbsp;</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
