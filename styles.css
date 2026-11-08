@@ -21,7 +21,10 @@
 
 html, body { margin: 0; padding: 0; }
 
+html { touch-action: pan-y; }
+
 body {
+  touch-action: pan-y;
   height: 100dvh;
   overflow: hidden;               /* one screen — only the to-do list scrolls */
   font-family: var(--sans);
@@ -33,6 +36,21 @@ body {
 ::selection { background: rgba(30, 111, 180, 0.25); }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* scrollbars, themed to the site */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.35); }
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 48, 76, 0.38);
+  border-radius: 99px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(16, 48, 76, 0.55); }
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 48, 76, 0.4) rgba(255, 255, 255, 0.4);
+}
 
 button, input, select { font-family: var(--sans); }
 
@@ -370,7 +388,7 @@ button, input, select { font-family: var(--sans); }
 
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
 
-#calDays { flex: 1; grid-auto-rows: 1fr; }   /* month rows share the space evenly */
+#calDays { flex: 1; grid-auto-rows: minmax(38px, 1fr); }   /* rows share the space, never collapse */
 
 .cal-weekdays { margin-bottom: 6px; }
 
@@ -391,14 +409,14 @@ button, input, select { font-family: var(--sans); }
   font-variant-numeric: tabular-nums;
 }
 
-/* the ring/background circle — always a circle, sized to the cell width */
+/* the ring/background circle — always a circle, sized to the cell, never taller than it */
 .day::before {
   content: '';
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(calc((100cqw - 38px) / 7), 100%);
+  height: min(100%, calc((100cqw - 38px) / 7));
   aspect-ratio: 1;
   border-radius: 50%;
   border: 1.5px solid transparent;

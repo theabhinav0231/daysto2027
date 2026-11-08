@@ -350,6 +350,21 @@ function toggleMusic() {
 
 $('musicBtn').addEventListener('click', toggleMusic);
 
+/* ————————————————— block browser zoom (pinch, ctrl+wheel, ctrl+±) ————————————————— */
+
+window.addEventListener('wheel', (e) => {
+  if (e.ctrlKey || e.metaKey) e.preventDefault();
+}, { passive: false });
+
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && ['+', '-', '=', '0'].includes(e.key)) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+document.addEventListener('dblclick', (e) => e.preventDefault());
+
 function pomoComplete(now) {
   const year = String(istParts(now).y);
   logFocus(year, pomo.durationMs);
