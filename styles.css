@@ -126,6 +126,12 @@ button, input, select { font-family: var(--sans); }
   }
 }
 
+/* center flakes carry a faint cool shadow so they read on the light sky */
+.snow-center i {
+  background: #FFFFFF;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.95), 0 1px 3px rgba(16, 48, 76, 0.3);
+}
+
 /* string lights hanging from the top-left, in swags */
 
 .lights {
