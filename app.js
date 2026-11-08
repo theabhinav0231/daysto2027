@@ -367,9 +367,15 @@ document.addEventListener('dblclick', (e) => e.preventDefault());
 
 /* rebuild the lights when the viewport size changes (rotation etc.) */
 let lightsResizeTimer = null;
+let snowClusterWidth = window.innerWidth;
 window.addEventListener('resize', () => {
   clearTimeout(lightsResizeTimer);
   lightsResizeTimer = setTimeout(() => {
+    const width = window.innerWidth;
+    if (Math.abs(width - snowClusterWidth) > 120) {
+      snowClusterWidth = width;
+      buildSnowTopRight();
+    }
     const svg = document.querySelector('.lights');
     if (!svg) return;
     svg.querySelectorAll('.bulb, defs').forEach((n) => n.remove());
@@ -538,12 +544,12 @@ function buildSnow() {
     const depth = roll < 0.38 ? 0 : roll < 0.81 ? 1 : 2; // 0 far, 1 mid, 2 near
 
     const size = depth === 0 ? rand(1.4, 2.4) : depth === 1 ? rand(2.4, 4.2) : rand(4.5, 8);
-    const dur = depth === 0 ? rand(22, 34) : depth === 1 ? rand(15, 23) : rand(9, 16);
+    const dur = depth === 0 ? rand(27, 40) : depth === 1 ? rand(19, 28) : rand(12, 19);
     const delay = rand(-dur, 0);
     const opacity = depth === 0 ? rand(0.3, 0.5) : depth === 1 ? rand(0.5, 0.75) : rand(0.68, 0.95);
     const drift = rand(0.15, 1) * (0.06 + depth * 0.04) * vw; // a steady breeze, not a swirl
     const sway = depth === 0 ? rand(3, 9) : depth === 1 ? rand(8, 20) : rand(16, 36);
-    const swayDur = rand(3.2, 7.2);
+    const swayDur = depth === 0 ? rand(4, 8) : depth === 1 ? rand(4.5, 8.5) : rand(5, 9.5);
     const swayDelay = rand(-swayDur, 0);
     const glow = depth === 0 ? 2 : depth === 1 ? 5 : 9;
 
@@ -574,7 +580,7 @@ function buildSnow() {
   const bokehCount = vw > 900 ? 4 : 2;
   for (let i = 0; i < bokehCount; i++) {
     const size = rand(10, 17);
-    const dur = rand(18, 28);
+    const dur = rand(22, 34);
     const flake = document.createElement('i');
     flake.classList.add('bokeh');
     flake.style.cssText =
@@ -584,9 +590,81 @@ function buildSnow() {
       `--delay:${rand(-dur, 0).toFixed(1)}s;` +
       `--drift:${(rand(0.2, 1) * 0.08 * vw).toFixed(1)}px;` +
       `--sway:${rand(18, 40).toFixed(1)}px;` +
-      `--sway-dur:${rand(4.5, 8).toFixed(1)}s;` +
+      `--sway-dur:${rand(5, 9).toFixed(1)}s;` +
       `--sway-delay:${rand(-8, 0).toFixed(1)}s;` +
       `--o:${rand(0.12, 0.22).toFixed(2)};` +
+      `--glow:0px`;
+    frag.appendChild(flake);
+  }
+
+  layer.appendChild(frag);
+}
+
+/* a denser pocket of snow in the top-right corner, as the page had before */
+function buildSnowTopRight() {
+  const layer = $('snowTopRight');
+  if (!layer || REDUCED) return;
+  layer.textContent = '';
+
+  const vw = window.innerWidth;
+  const count = vw > 900 ? 28 : 24;
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const frag = document.createDocumentFragment();
+
+  for (let i = 0; i < count; i++) {
+    const roll = Math.random();
+    const depth = roll < 0.38 ? 0 : roll < 0.81 ? 1 : 2;
+
+    const size = depth === 0 ? rand(1.2, 2.1) : depth === 1 ? rand(2.2, 3.8) : rand(4.2, 7);
+    const dur = depth === 0 ? rand(20, 30) : depth === 1 ? rand(16, 24) : rand(12, 18);
+    const delay = rand(-dur, 0);
+    const opacity = depth === 0 ? rand(0.3, 0.48) : depth === 1 ? rand(0.5, 0.72) : rand(0.68, 0.92);
+    const drift = rand(12, 30) + depth * rand(6, 14);
+    const sway = depth === 0 ? rand(2, 6) : depth === 1 ? rand(6, 14) : rand(12, 24);
+    const swayDur = depth === 0 ? rand(3.5, 6.5) : depth === 1 ? rand(4, 7.5) : rand(4.5, 8.5);
+    const swayDelay = rand(-swayDur, 0);
+    const glow = depth === 0 ? 2 : depth === 1 ? 4 : 7;
+
+    const flake = document.createElement('i');
+    flake.style.cssText =
+      `--x:${rand(0, 100).toFixed(2)}%;` +
+      `--size:${size.toFixed(1)}px;` +
+      `--dur:${dur.toFixed(1)}s;` +
+      `--delay:${delay.toFixed(1)}s;` +
+      `--drift:${drift.toFixed(1)}px;` +
+      `--sway:${sway.toFixed(1)}px;` +
+      `--sway-dur:${swayDur.toFixed(1)}s;` +
+      `--sway-delay:${swayDelay.toFixed(1)}s;` +
+      `--o:${opacity.toFixed(2)};` +
+      `--glow:${glow}px`;
+
+    if (depth === 2 && Math.random() < 0.14) flake.classList.add('star');
+    if (depth > 0 && Math.random() < 0.28) {
+      flake.classList.add('twinkle');
+      flake.style.setProperty('--twinkle-dur', `${rand(2.6, 5).toFixed(1)}s`);
+      flake.style.setProperty('--twinkle-delay', `${rand(-5, 0).toFixed(1)}s`);
+    }
+
+    frag.appendChild(flake);
+  }
+
+  // a couple of soft, out-of-focus flakes to keep the pocket from feeling flat
+  const bokehCount = vw > 900 ? 2 : 1;
+  for (let i = 0; i < bokehCount; i++) {
+    const size = rand(8, 14);
+    const dur = rand(20, 30);
+    const flake = document.createElement('i');
+    flake.classList.add('bokeh');
+    flake.style.cssText =
+      `--x:${rand(0, 100).toFixed(2)}%;` +
+      `--size:${size.toFixed(1)}px;` +
+      `--dur:${dur.toFixed(1)}s;` +
+      `--delay:${rand(-dur, 0).toFixed(1)}s;` +
+      `--drift:${rand(10, 30).toFixed(1)}px;` +
+      `--sway:${rand(10, 24).toFixed(1)}px;` +
+      `--sway-dur:${rand(5, 9).toFixed(1)}s;` +
+      `--sway-delay:${rand(-8, 0).toFixed(1)}s;` +
+      `--o:${rand(0.12, 0.2).toFixed(2)};` +
       `--glow:0px`;
     frag.appendChild(flake);
   }
@@ -715,6 +793,8 @@ function buildLights() {
       const specX = x - 2.4 * s;
       const specY = cy - 2.8 * s;
       g.appendChild(el('ellipse', { cx: specX.toFixed(1), cy: specY.toFixed(1), rx: (1.5 * s).toFixed(1), ry: (2.2 * s).toFixed(1), fill: '#FFFFFF', opacity: '0.58', transform: `rotate(-30 ${specX.toFixed(1)} ${specY.toFixed(1)})`, class: 'spec' }));
+      // dark glass tint that fades in as the filament cools
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (6.7 * s).toFixed(1), fill: '#061A2B', class: 'dim' }));
       // white-hot center
       g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (4 * s).toFixed(1), fill: 'url(#bulb-core)', class: 'core' }));
       g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (1.2 * s).toFixed(1), fill: '#FFFFFF', class: 'filament' }));
@@ -764,6 +844,7 @@ function tick() {
   renderFocusFoot();
   buildTodoList();
   buildSnow();
+  buildSnowTopRight();
   buildLights();
   $('musicBtn').innerHTML = ICON_MUSIC;
 
