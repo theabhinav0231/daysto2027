@@ -607,7 +607,7 @@ function buildSnowTopRight() {
   layer.textContent = '';
 
   const vw = window.innerWidth;
-  const count = vw > 900 ? 28 : 24;
+  const count = vw > 900 ? 48 : 36;
   const rand = (min, max) => min + Math.random() * (max - min);
   const frag = document.createDocumentFragment();
 
@@ -648,8 +648,8 @@ function buildSnowTopRight() {
     frag.appendChild(flake);
   }
 
-  // a couple of soft, out-of-focus flakes to keep the pocket from feeling flat
-  const bokehCount = vw > 900 ? 2 : 1;
+  // a few soft, out-of-focus flakes to keep the pocket from feeling flat
+  const bokehCount = vw > 900 ? 3 : 2;
   for (let i = 0; i < bokehCount; i++) {
     const size = rand(8, 14);
     const dur = rand(20, 30);
