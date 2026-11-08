@@ -125,7 +125,10 @@
       </section>
 
       <section class="glass card-todo" aria-label="Work to-do list">
-        <p class="panel-label">Work to-do</p>
+        <div class="todo-head">
+          <p class="panel-label">Work to-do</p>
+          <p class="todo-count" id="todoCount">&nbsp;</p>
+        </div>
         <form class="todo-form" id="todoForm">
           <input type="text" id="todoInput" placeholder="Add a task…" autocomplete="off" maxlength="200" aria-label="New task">
           <button type="submit" class="enter-btn" aria-label="Add task">
@@ -136,7 +139,6 @@
           <ul class="todo-list" id="todoList"></ul>
           <p class="todo-empty" id="todoEmpty">Nothing here yet — add your first task.</p>
         </div>
-        <p class="todo-count" id="todoCount">&nbsp;</p>
       </section>
     </main>
   </div>

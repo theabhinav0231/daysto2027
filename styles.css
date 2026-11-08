@@ -609,12 +609,27 @@ button, input, select { font-family: var(--sans); }
   min-width: 0;
 }
 
-.todo-form { display: flex; gap: 8px; margin: 12px 0; }
+.todo-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.todo-count {
+  margin: 0;
+  font: 700 12.5px/1 var(--sans);
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.todo-form { display: flex; gap: 8px; margin: 10px 0; }
 
 .todo-form input[type="text"] {
   flex: 1;
   min-width: 0;
-  padding: 11px 18px;
+  padding: 10px 18px;
   border-radius: 999px;
   border: 1px solid var(--line-strong);
   background: rgba(255, 255, 255, 0.6);
@@ -630,8 +645,8 @@ button, input, select { font-family: var(--sans); }
 
 .enter-btn {
   flex: none;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: none;
   background: rgba(30, 111, 180, 0.14);
@@ -643,7 +658,7 @@ button, input, select { font-family: var(--sans); }
   transition: background 0.15s, transform 0.15s;
 }
 
-.enter-btn svg { width: 18px; height: 18px; }
+.enter-btn svg { width: 17px; height: 17px; }
 
 .enter-btn:hover { background: rgba(30, 111, 180, 0.26); }
 
@@ -663,15 +678,15 @@ button, input, select { font-family: var(--sans); }
 .todo-scroll::-webkit-scrollbar-thumb { background: rgba(16, 48, 76, 0.2); border-radius: 99px; }
 .todo-scroll::-webkit-scrollbar-thumb:hover { background: rgba(16, 48, 76, 0.32); }
 
-.todo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.todo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 9px;
   background: rgba(255, 255, 255, 0.5);
-  border-radius: 14px;
-  padding: 10px 13px;
+  border-radius: 12px;
+  padding: 7px 11px;
   will-change: transform;
 }
 
@@ -687,8 +702,8 @@ button, input, select { font-family: var(--sans); }
 .check {
   position: relative;
   flex: none;
-  width: 21px;
-  height: 21px;
+  width: 19px;
+  height: 19px;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -703,8 +718,8 @@ button, input, select { font-family: var(--sans); }
 }
 
 .tick {
-  width: 19px;
-  height: 19px;
+  width: 17px;
+  height: 17px;
   border: 1.5px solid var(--line-strong);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.6);
@@ -717,8 +732,8 @@ button, input, select { font-family: var(--sans); }
 
 .tick::after {
   content: '';
-  width: 8px;
-  height: 4px;
+  width: 7px;
+  height: 3.5px;
   border-left: 2px solid var(--accent);
   border-bottom: 2px solid var(--accent);
   transform: rotate(-45deg) scale(0);
@@ -732,7 +747,7 @@ button, input, select { font-family: var(--sans); }
 .todo-text {
   flex: 1;
   position: relative;
-  font: 400 13.5px/1.4 var(--sans);
+  font: 400 12.5px/1.35 var(--sans);
   color: var(--ink);
   overflow-wrap: anywhere;
   transition: color 0.25s;
@@ -761,8 +776,8 @@ button, input, select { font-family: var(--sans); }
   border: none;
   background: transparent;
   color: var(--ink-faint);
-  font: 400 16px/1 var(--sans);
-  padding: 2px 6px;
+  font: 400 15px/1 var(--sans);
+  padding: 2px 5px;
   border-radius: 8px;
   cursor: pointer;
   opacity: 0;
@@ -776,8 +791,8 @@ button, input, select { font-family: var(--sans); }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 2px 2px;
-  font: 700 10px/1 var(--sans);
+  padding: 8px 2px 0;
+  font: 700 9.5px/1 var(--sans);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -787,20 +802,10 @@ button, input, select { font-family: var(--sans); }
 
 .todo-empty {
   margin: 0;
-  padding: 24px 0;
+  padding: 18px 0;
   text-align: center;
-  font: 400 13px/1.6 var(--sans);
+  font: 400 12.5px/1.6 var(--sans);
   color: var(--ink-faint);
-}
-
-.todo-count {
-  margin: 10px 2px 0;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-  font: 400 11.5px/1 var(--sans);
-  letter-spacing: 0.06em;
-  color: var(--ink-faint);
-  text-align: right;
 }
 
 /* ——— small screens: allow scroll again ——— */
