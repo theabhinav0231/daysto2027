@@ -104,6 +104,28 @@ button, input, select { font-family: var(--sans); }
   100% { transform: translate3d(var(--drift), 330px, 0); opacity: 0; }
 }
 
+/* a gentle second snowfall drifting over the center timer */
+
+.snow-center {
+  position: fixed;
+  top: 110px;
+  left: 24px;
+  width: min(52vw, 660px);
+  height: 470px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (max-width: 600px) {
+  .snow-center {
+    top: 78px;
+    left: 8px;
+    width: calc(100vw - 16px);
+    height: 230px;
+  }
+}
+
 /* string lights hanging from the top-left, in swags */
 
 .lights {
