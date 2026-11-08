@@ -71,14 +71,11 @@ button, input, select { font-family: var(--sans); }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
 }
 
-/* slant snow, top right */
+/* ——— snow: three depths drifting and swaying across the whole sky ——— */
 
 .snow {
   position: fixed;
-  top: 0;
-  right: 0;
-  width: min(30vw, 460px);
-  height: 300px;
+  inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 1;
@@ -86,50 +83,72 @@ button, input, select { font-family: var(--sans); }
 
 .snow i {
   position: absolute;
-  top: -12px;
-  left: var(--left);
-  width: var(--size);
-  height: var(--size);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  top: 0;
+  left: var(--x, 50%);
+  width: var(--size, 4px);
+  height: var(--size, 4px);
   opacity: 0;
-  animation: snowfall var(--d) linear var(--delay) infinite;
+  animation: snow-fall var(--dur, 18s) linear var(--delay, 0s) infinite;
 }
 
-@keyframes snowfall {
-  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
-  10%  { opacity: var(--o, 0.8); }
-  82%  { opacity: var(--o, 0.8); }
-  100% { transform: translate3d(var(--drift), 330px, 0); opacity: 0; }
+/* the flake itself sways inside the falling wrapper, so the fall path
+   stays smooth while the snow wanders with the wind */
+.snow i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%,
+    #FFFFFF 0%,
+    rgba(255, 255, 255, 0.95) 32%,
+    rgba(255, 255, 255, 0.6) 62%,
+    rgba(255, 255, 255, 0) 100%);
+  box-shadow:
+    0 0 var(--glow, 5px) rgba(255, 255, 255, 0.55),
+    0 1px 2px rgba(16, 48, 76, 0.16);
+  animation: snow-sway var(--sway-dur, 5s) ease-in-out var(--sway-delay, 0s) infinite alternate;
 }
 
-/* a gentle second snowfall drifting over the center timer */
-
-.snow-center {
-  position: fixed;
-  top: 110px;
-  left: 24px;
-  width: min(52vw, 660px);
-  height: 470px;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 1;
+/* a handful of near flakes are real six-arm crystals */
+.snow i.star::before {
+  border-radius: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.25' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7'/%3E%3Cpath d='M12 5l-2.2-2.2M12 5l2.2-2.2M12 19l-2.2 2.2M12 19l2.2 2.2M5.6 8.4l-2.8-.8M6.5 9.9l-2.8.8M18.4 15.6l2.8.8M17.5 14.1l2.8-.8M5.6 15.6l-2.8.8M6.5 14.1l-2.8-.8M18.4 8.4l2.8-.8M17.5 9.9l2.8.8'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  box-shadow: none;
+  filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.85));
 }
 
-@media (max-width: 600px) {
-  .snow-center {
-    top: 78px;
-    left: 8px;
-    width: calc(100vw - 16px);
-    height: 230px;
-  }
+/* soft, out-of-focus flakes close to the camera */
+.snow i.bokeh::before {
+  background: radial-gradient(circle at 38% 34%,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.36) 38%,
+    rgba(255, 255, 255, 0.06) 68%,
+    rgba(255, 255, 255, 0) 100%);
+  box-shadow: none;
+  filter: blur(1.4px);
 }
 
-/* center flakes carry a faint cool shadow so they read on the light sky */
-.snow-center i {
-  background: #FFFFFF;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.95), 0 1px 3px rgba(16, 48, 76, 0.3);
+.snow i.twinkle::before {
+  animation:
+    snow-sway var(--sway-dur, 5s) ease-in-out var(--sway-delay, 0s) infinite alternate,
+    snow-twinkle var(--twinkle-dur, 3.5s) ease-in-out var(--twinkle-delay, 0s) infinite;
+}
+
+@keyframes snow-fall {
+  0%   { transform: translate3d(0, -10vh, 0); opacity: 0; }
+  7%   { opacity: var(--o, 0.75); }
+  88%  { opacity: var(--o, 0.75); }
+  100% { transform: translate3d(var(--drift, 0px), 108vh, 0); opacity: 0; }
+}
+
+@keyframes snow-sway {
+  from { transform: translate3d(calc(var(--sway, 16px) * -1), 0, 0) rotate(-12deg); }
+  to   { transform: translate3d(var(--sway, 16px), 0, 0) rotate(12deg); }
+}
+
+@keyframes snow-twinkle {
+  0%, 100% { opacity: 0.68; }
+  50%      { opacity: 1; }
 }
 
 /* string lights hanging from the top-left, in swags */
@@ -144,61 +163,107 @@ button, input, select { font-family: var(--sans); }
 }
 
 @keyframes sway {
-  0%, 100% { transform: rotate(0.6deg); }
-  50%      { transform: rotate(-0.6deg); }
+  0%, 100% { transform: rotate(0.35deg); }
+  50%      { transform: rotate(-0.35deg); }
 }
 
 .wire {
-  stroke: #2A4656;
-  stroke-width: 2;
+  stroke: #1E394B;
+  stroke-width: 1.8;
   stroke-linecap: round;
-  opacity: 0.85;
+  opacity: 0.8;
   vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 1px 1px rgba(16, 48, 76, 0.16));
 }
 
-/* each bulb: dark socket, glass sphere, white-hot core, soft bloom
-   and a star-glint flash right at the moment it blinks on */
-.bulb .glass { opacity: 0.95; }
+/* each bulb hangs from its own tiny pivot, so the swags breathe instead
+   of swinging as one rigid piece */
+.bulb {
+  transform-box: view-box;
+  transform-origin: var(--pivot, 50% 0%);
+  animation: bulb-sway var(--sway-dur, 7s) ease-in-out var(--sway-delay, 0s) infinite;
+}
 
-.bulb .halo {
-  opacity: 0.2;
+@keyframes bulb-sway {
+  0%, 100% { transform: rotate(-0.5deg); }
+  50%      { transform: rotate(0.5deg); }
+}
+
+/* glow stack, back to front:
+   wide colour wash → soft halo → white bloom → glass → white-hot core */
+
+.bulb .wash,
+.bulb .aura,
+.bulb .halo,
+.bulb .bloom,
+.bulb .core,
+.bulb .glint {
   transform-box: fill-box;
   transform-origin: center;
-  animation: halobloom 2.8s ease-in-out infinite;
-  animation-delay: var(--bd, 0s);
+}
+
+.bulb .glass { opacity: 0.98; }
+
+.bulb .wash { opacity: 0.17; }
+
+.bulb .aura { opacity: 0.25; }
+
+.bulb .halo {
+  opacity: 0.65;
+  animation: halo-breathe var(--tw, 3.6s) ease-in-out var(--td, 0s) infinite;
+}
+
+.bulb .bloom {
+  opacity: 0.9;
+  animation: bloom-breathe var(--tw, 3.6s) ease-in-out var(--td, 0s) infinite;
 }
 
 .bulb .core {
-  opacity: 0.25;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: coreflash 2.8s ease-in-out infinite;
-  animation-delay: var(--bd, 0s);
+  opacity: 0.9;
+  animation: core-flash var(--tw, 3.6s) ease-in-out var(--td, 0s) infinite;
 }
 
-@keyframes halobloom {
-  0%, 100% { opacity: 0.18; transform: scale(0.85); }
-  40%, 60% { opacity: 1;    transform: scale(1.15); }
-}
-
-@keyframes coreflash {
-  0%, 100% { opacity: 0.22; transform: scale(0.9); }
-  40%, 60% { opacity: 1;    transform: scale(1.35); }
-}
+.bulb .filament { opacity: 0.92; }
 
 .bulb .glint {
   opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: glint 2.8s ease-in-out infinite;
-  animation-delay: var(--bd, 0s);
+  animation: glint var(--tw, 3.6s) ease-in-out var(--td, 0s) infinite;
+}
+
+@keyframes halo-breathe {
+  0%, 100% { opacity: calc(var(--peak, 1) * 0.42); transform: scale(0.9); }
+  38%      { opacity: var(--peak, 1); transform: scale(1.05); }
+  52%      { opacity: calc(var(--peak, 1) * 0.68); transform: scale(0.97); }
+  68%      { opacity: var(--peak, 1); transform: scale(1.12); }
+}
+
+@keyframes bloom-breathe {
+  0%, 100% { opacity: calc(var(--peak, 1) * 0.68); transform: scale(0.9); }
+  40%      { opacity: var(--peak, 1); transform: scale(1.06); }
+  60%      { opacity: var(--peak, 1); transform: scale(1.12); }
+}
+
+@keyframes core-flash {
+  0%, 100% { opacity: calc(var(--peak, 1) * 0.68); transform: scale(0.9); }
+  38%      { opacity: var(--peak, 1); transform: scale(1.08); }
+  52%      { opacity: calc(var(--peak, 1) * 0.82); transform: scale(0.99); }
+  68%      { opacity: var(--peak, 1); transform: scale(1.18); }
 }
 
 @keyframes glint {
-  0%, 30%, 58%, 100% { opacity: 0;    transform: scale(0.25) rotate(0deg); }
-  40%                { opacity: 0.95; transform: scale(1) rotate(12deg); }
-  48%                { opacity: 0.4;  transform: scale(0.7) rotate(35deg); }
+  0%, 30%, 58%, 100% { opacity: 0;    transform: scale(0.2) rotate(0deg); }
+  40%                { opacity: 0.92; transform: scale(1) rotate(12deg); }
+  48%                { opacity: 0.35; transform: scale(0.65) rotate(35deg); }
 }
+
+/* a few bulbs stay quietly lit while the rest shimmer */
+.bulb.steady .wash,
+.bulb.steady .aura,
+.bulb.steady .halo,
+.bulb.steady .bloom,
+.bulb.steady .core,
+.bulb.steady .glint { animation: none; }
+.bulb.steady .glint { opacity: 0; }
 
 /* ——— corner audio button (Claude FM) ——— */
 
@@ -905,9 +970,13 @@ button, input, select { font-family: var(--sans); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shine, .sp, .snow i, .lights, .bulb .halo, .bulb .core, .bulb .glint, .todo-item.just-added { animation: none !important; }
+  .shine, .sp, .lights, .bulb, .bulb .wash, .bulb .aura, .bulb .halo, .bulb .bloom, .bulb .core, .bulb .glint, .todo-item.just-added { animation: none !important; }
+  .snow { display: none; }
+  .bulb .wash { opacity: 0.18; }
+  .bulb .aura { opacity: 0.2; }
   .bulb .halo { opacity: 0.55; }
-  .bulb .core { opacity: 0.75; }
+  .bulb .bloom { opacity: 0.8; }
+  .bulb .core { opacity: 0.8; }
   .bulb .glint { opacity: 0; }
   .todo-text::after, .tick::after { transition: none !important; }
 }

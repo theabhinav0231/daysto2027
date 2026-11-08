@@ -521,6 +521,79 @@ todoList.addEventListener('click', (e) => {
   renderTodos(true);
 });
 
+/* ————————————————— snow (full-sky, three depths) ————————————————— */
+
+function buildSnow() {
+  const layer = $('snow');
+  if (!layer || REDUCED) return;
+  layer.textContent = '';
+
+  const vw = window.innerWidth;
+  const count = Math.round(Math.min(112, Math.max(40, (vw * window.innerHeight) / 17500)));
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const frag = document.createDocumentFragment();
+
+  for (let i = 0; i < count; i++) {
+    const roll = Math.random();
+    const depth = roll < 0.38 ? 0 : roll < 0.81 ? 1 : 2; // 0 far, 1 mid, 2 near
+
+    const size = depth === 0 ? rand(1.4, 2.4) : depth === 1 ? rand(2.4, 4.2) : rand(4.5, 8);
+    const dur = depth === 0 ? rand(22, 34) : depth === 1 ? rand(15, 23) : rand(9, 16);
+    const delay = rand(-dur, 0);
+    const opacity = depth === 0 ? rand(0.3, 0.5) : depth === 1 ? rand(0.5, 0.75) : rand(0.68, 0.95);
+    const drift = rand(0.15, 1) * (0.06 + depth * 0.04) * vw; // a steady breeze, not a swirl
+    const sway = depth === 0 ? rand(3, 9) : depth === 1 ? rand(8, 20) : rand(16, 36);
+    const swayDur = rand(3.2, 7.2);
+    const swayDelay = rand(-swayDur, 0);
+    const glow = depth === 0 ? 2 : depth === 1 ? 5 : 9;
+
+    const flake = document.createElement('i');
+    flake.style.cssText =
+      `--x:${rand(0, 100).toFixed(2)}%;` +
+      `--size:${size.toFixed(1)}px;` +
+      `--dur:${dur.toFixed(1)}s;` +
+      `--delay:${delay.toFixed(1)}s;` +
+      `--drift:${drift.toFixed(1)}px;` +
+      `--sway:${sway.toFixed(1)}px;` +
+      `--sway-dur:${swayDur.toFixed(1)}s;` +
+      `--sway-delay:${swayDelay.toFixed(1)}s;` +
+      `--o:${opacity.toFixed(2)};` +
+      `--glow:${glow}px`;
+
+    if (depth === 2 && Math.random() < 0.13) flake.classList.add('star');
+    if (depth > 0 && Math.random() < 0.3) {
+      flake.classList.add('twinkle');
+      flake.style.setProperty('--twinkle-dur', `${rand(2.6, 5.2).toFixed(1)}s`);
+      flake.style.setProperty('--twinkle-delay', `${rand(-5, 0).toFixed(1)}s`);
+    }
+
+    frag.appendChild(flake);
+  }
+
+  // a few large, out-of-focus flakes for depth
+  const bokehCount = vw > 900 ? 4 : 2;
+  for (let i = 0; i < bokehCount; i++) {
+    const size = rand(10, 17);
+    const dur = rand(18, 28);
+    const flake = document.createElement('i');
+    flake.classList.add('bokeh');
+    flake.style.cssText =
+      `--x:${rand(0, 100).toFixed(2)}%;` +
+      `--size:${size.toFixed(1)}px;` +
+      `--dur:${dur.toFixed(1)}s;` +
+      `--delay:${rand(-dur, 0).toFixed(1)}s;` +
+      `--drift:${(rand(0.2, 1) * 0.08 * vw).toFixed(1)}px;` +
+      `--sway:${rand(18, 40).toFixed(1)}px;` +
+      `--sway-dur:${rand(4.5, 8).toFixed(1)}s;` +
+      `--sway-delay:${rand(-8, 0).toFixed(1)}s;` +
+      `--o:${rand(0.12, 0.22).toFixed(2)};` +
+      `--glow:0px`;
+    frag.appendChild(flake);
+  }
+
+  layer.appendChild(frag);
+}
+
 /* ————————————————— string lights (top-left swags) ————————————————— */
 
 function buildLights() {
@@ -528,14 +601,15 @@ function buildLights() {
   if (!svg) return;
   const NS = 'http://www.w3.org/2000/svg';
   const palette = [
-    ['#FF4D4D', '#FFB3B3'],  // red
-    ['#FFC94D', '#FFE9A8'],  // warm yellow
-    ['#4DE28C', '#B0F2CE'],  // green
-    ['#4DA8FF', '#BFDFFF'],  // blue
-    ['#C77DFF', '#E8C6FF'],  // purple
-    ['#FF9E4D', '#FFD1AB'],  // orange
+    ['#FF4D4D', '#FFC4C4', '#C22F3C'],  // red
+    ['#FFC94D', '#FFEBB0', '#D79B22'],  // warm yellow
+    ['#4DE28C', '#B6F5D2', '#21A65C'],  // green
+    ['#4DA8FF', '#C4E2FF', '#2676C9'],  // blue
+    ['#C77DFF', '#E9C9FF', '#8B4CC4'],  // purple
+    ['#FF9E4D', '#FFD6B5', '#D76F1F'],  // orange
   ];
   const counts = [6, 6, 10, 6, 9];
+  const rand = (min, max) => min + Math.random() * (max - min);
 
   // bulbs scale up on small screens so they stay visible in phone UI
   const scale = (svg.clientWidth || 700) / 780;
@@ -547,21 +621,58 @@ function buildLights() {
     return e;
   };
 
-  // one glass gradient + one halo gradient per color
   const defs = el('defs', {});
-  palette.forEach(([base, light], i) => {
-    const glass = el('radialGradient', { id: `bulb-glass-${i}` });
-    [['0%', light, 1], ['55%', base, 0.95], ['100%', base, 0.85]].forEach(([o, c, op]) => {
-      const s = el('stop', { offset: o, 'stop-color': c, 'stop-opacity': op });
-      glass.appendChild(s);
+
+  // shared white-hot bloom + core gradients
+  const bloomGrad = el('radialGradient', { id: 'bulb-bloom' });
+  [['0%', 0.98], ['14%', 0.78], ['34%', 0.46], ['58%', 0.18], ['80%', 0.05], ['100%', 0]].forEach(([o, op]) => {
+    bloomGrad.appendChild(el('stop', { offset: o, 'stop-color': '#FFFFFF', 'stop-opacity': op }));
+  });
+  const coreGrad = el('radialGradient', { id: 'bulb-core' });
+  [['0%', 1], ['28%', 0.98], ['55%', 0.62], ['78%', 0.18], ['100%', 0]].forEach(([o, op]) => {
+    coreGrad.appendChild(el('stop', { offset: o, 'stop-color': '#FFFFFF', 'stop-opacity': op }));
+  });
+  const washGrad = el('radialGradient', { id: 'bulb-wash' });
+  [['0%', 0.55], ['30%', 0.26], ['62%', 0.07], ['100%', 0]].forEach(([o, op]) => {
+    washGrad.appendChild(el('stop', { offset: o, 'stop-color': '#FFFFFF', 'stop-opacity': op }));
+  });
+  defs.append(bloomGrad, coreGrad, washGrad);
+
+  // one glass gradient, halo and wide aura per color
+  palette.forEach(([base, light, deep], i) => {
+    const glass = el('radialGradient', { id: `bulb-glass-${i}`, fx: '32%', fy: '28%' });
+    [
+      ['0%', light, 1],
+      ['32%', base, 1],
+      ['70%', base, 0.97],
+      ['100%', deep, 1],
+    ].forEach(([o, c, op]) => {
+      glass.appendChild(el('stop', { offset: o, 'stop-color': c, 'stop-opacity': op }));
     });
+
     const halo = el('radialGradient', { id: `bulb-halo-${i}` });
-    [['0%', base, 0.8], ['45%', base, 0.4], ['100%', base, 0]].forEach(([o, c, op]) => {
-      const s = el('stop', { offset: o, 'stop-color': c, 'stop-opacity': op });
-      halo.appendChild(s);
+    [
+      ['0%', light, 0.98],
+      ['16%', base, 0.7],
+      ['40%', base, 0.34],
+      ['66%', base, 0.12],
+      ['84%', base, 0.04],
+      ['100%', base, 0],
+    ].forEach(([o, c, op]) => {
+      halo.appendChild(el('stop', { offset: o, 'stop-color': c, 'stop-opacity': op }));
     });
-    defs.appendChild(glass);
-    defs.appendChild(halo);
+
+    const aura = el('radialGradient', { id: `bulb-aura-${i}` });
+    [
+      ['0%', base, 0.35],
+      ['30%', base, 0.15],
+      ['62%', base, 0.045],
+      ['100%', base, 0],
+    ].forEach(([o, c, op]) => {
+      aura.appendChild(el('stop', { offset: o, 'stop-color': c, 'stop-opacity': op }));
+    });
+
+    defs.append(glass, halo, aura);
   });
   svg.appendChild(defs);
 
@@ -573,19 +684,52 @@ function buildLights() {
       const ci = (i + pi * 2) % palette.length;
       const x = pt.x;
       const yTop = pt.y + 2;             // socket hangs just under the cable
+      const cy = yTop + 12 * s;
+      const tw = rand(3.2, 6.4);         // each bulb breathes on its own clock
+      const td = rand(-tw, 0);
+      const swayDur = rand(5.5, 10);
+      const swayDelay = rand(-swayDur, 0);
+
       const g = el('g', { class: 'bulb' });
-      g.style.setProperty('--bd', `${(Math.random() * -2.8).toFixed(2)}s`);
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 13 * s).toFixed(1), r: (15 * s).toFixed(1), fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
-      g.appendChild(el('rect', { x: (x - 2.2 * s).toFixed(1), y: yTop.toFixed(1), width: (4.4 * s).toFixed(1), height: (6 * s).toFixed(1), rx: (1.2 * s).toFixed(1), fill: '#26343F' }));
-      const gg = el('g', { transform: `translate(${x.toFixed(1)}, ${(yTop + 12 * s).toFixed(1)}) scale(${s.toFixed(2)})` });
-      gg.appendChild(el('path', {
-        d: 'M0,-7 C1,-2 2,-1 7,0 C2,1 1,2 0,7 C-1,2 -2,1 -7,0 C-2,-1 -1,-2 0,-7 Z',
-        fill: '#FFFFFF',
-        class: 'glint',
-      }));
-      g.appendChild(gg);
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 12 * s).toFixed(1), r: (6 * s).toFixed(1), fill: `url(#bulb-glass-${ci})`, class: 'glass' }));
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 12 * s).toFixed(1), r: (2.3 * s).toFixed(1), fill: '#FFFFFF', class: 'core' }));
+      g.style.setProperty('--tw', `${tw.toFixed(2)}s`);
+      g.style.setProperty('--td', `${td.toFixed(2)}s`);
+      g.style.setProperty('--peak', rand(0.72, 1).toFixed(2));
+      g.style.setProperty('--sway-dur', `${swayDur.toFixed(2)}s`);
+      g.style.setProperty('--sway-delay', `${swayDelay.toFixed(2)}s`);
+      g.style.setProperty('--pivot', `${x.toFixed(1)}px ${yTop.toFixed(1)}px`);
+      if (Math.random() < 0.18) g.classList.add('steady');
+
+      // wide white wash that lets the string light the sky around it
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (30 * s).toFixed(1), fill: 'url(#bulb-wash)', class: 'wash' }));
+      // wide ambient tint
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (32 * s).toFixed(1), fill: `url(#bulb-aura-${ci})`, class: 'aura' }));
+      // soft colored halo
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (18 * s).toFixed(1), fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
+      // socket: dark cap + faint metal highlight
+      g.appendChild(el('rect', { x: (x - 2.6 * s).toFixed(1), y: yTop.toFixed(1), width: (5.2 * s).toFixed(1), height: (7 * s).toFixed(1), rx: (1.4 * s).toFixed(1), fill: '#1B2A35' }));
+      g.appendChild(el('rect', { x: (x - 2.3 * s).toFixed(1), y: (yTop + 0.5 * s).toFixed(1), width: (4.6 * s).toFixed(1), height: (1.2 * s).toFixed(1), rx: (0.6 * s).toFixed(1), fill: '#5A6E7C', opacity: '0.55' }));
+      // white bloom behind the glass
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (12 * s).toFixed(1), fill: 'url(#bulb-bloom)', class: 'bloom' }));
+      // glass bulb + specular glint
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (6.8 * s).toFixed(1), fill: `url(#bulb-glass-${ci})`, stroke: palette[ci][2], 'stroke-opacity': '0.5', 'stroke-width': (0.6 * s).toFixed(2), class: 'glass' }));
+      const specX = x - 2.4 * s;
+      const specY = cy - 2.8 * s;
+      g.appendChild(el('ellipse', { cx: specX.toFixed(1), cy: specY.toFixed(1), rx: (1.5 * s).toFixed(1), ry: (2.2 * s).toFixed(1), fill: '#FFFFFF', opacity: '0.58', transform: `rotate(-30 ${specX.toFixed(1)} ${specY.toFixed(1)})`, class: 'spec' }));
+      // white-hot center
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (4 * s).toFixed(1), fill: 'url(#bulb-core)', class: 'core' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (1.2 * s).toFixed(1), fill: '#FFFFFF', class: 'filament' }));
+
+      // occasional star glint at the brightest part of the cycle
+      if (Math.random() < 0.72) {
+        const gg = el('g', { transform: `translate(${x.toFixed(1)}, ${cy.toFixed(1)}) scale(${(s * 0.8).toFixed(2)})` });
+        gg.appendChild(el('path', {
+          d: 'M0,-7 C1,-2 2,-1 7,0 C2,1 1,2 0,7 C-1,2 -2,1 -7,0 C-2,-1 -1,-2 0,-7 Z',
+          fill: '#FFFFFF',
+          class: 'glint',
+        }));
+        g.appendChild(gg);
+      }
+
       svg.appendChild(g);
     }
   });
@@ -619,6 +763,7 @@ function tick() {
   setDurationFromMinutes(30); // default 30 min
   renderFocusFoot();
   buildTodoList();
+  buildSnow();
   buildLights();
   $('musicBtn').innerHTML = ICON_MUSIC;
 
