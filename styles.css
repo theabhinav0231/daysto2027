@@ -125,26 +125,51 @@ button, input, select { font-family: var(--sans); }
   stroke-width: 2;
   stroke-linecap: round;
   opacity: 0.85;
+  vector-effect: non-scaling-stroke;
 }
 
-/* each bulb: dark socket, glass sphere, white-hot core and a soft bloom */
+/* each bulb: dark socket, glass sphere, white-hot core, soft bloom
+   and a star-glint flash right at the moment it blinks on */
 .bulb .glass { opacity: 0.95; }
 
 .bulb .halo {
   opacity: 0.2;
-  animation: lightblink 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: halobloom 2.8s ease-in-out infinite;
   animation-delay: var(--bd, 0s);
 }
 
 .bulb .core {
   opacity: 0.25;
-  animation: lightblink 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: coreflash 2.8s ease-in-out infinite;
   animation-delay: var(--bd, 0s);
 }
 
-@keyframes lightblink {
-  0%, 100% { opacity: 0.16; }
-  40%, 60% { opacity: 1; }
+@keyframes halobloom {
+  0%, 100% { opacity: 0.18; transform: scale(0.85); }
+  40%, 60% { opacity: 1;    transform: scale(1.15); }
+}
+
+@keyframes coreflash {
+  0%, 100% { opacity: 0.22; transform: scale(0.9); }
+  40%, 60% { opacity: 1;    transform: scale(1.35); }
+}
+
+.bulb .glint {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: glint 2.8s ease-in-out infinite;
+  animation-delay: var(--bd, 0s);
+}
+
+@keyframes glint {
+  0%, 30%, 58%, 100% { opacity: 0;    transform: scale(0.25) rotate(0deg); }
+  40%                { opacity: 0.95; transform: scale(1) rotate(12deg); }
+  48%                { opacity: 0.4;  transform: scale(0.7) rotate(35deg); }
 }
 
 /* ——— corner audio button (Claude FM) ——— */
@@ -847,12 +872,14 @@ button, input, select { font-family: var(--sans); }
 }
 
 @media (max-width: 600px) {
-  .lights, .snow { display: none; }
+  .lights { width: 330px; }
+  .snow { width: 72vw; height: 250px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shine, .sp, .snow i, .lights, .bulb .halo, .bulb .core, .todo-item.just-added { animation: none !important; }
+  .shine, .sp, .snow i, .lights, .bulb .halo, .bulb .core, .bulb .glint, .todo-item.just-added { animation: none !important; }
   .bulb .halo { opacity: 0.55; }
   .bulb .core { opacity: 0.75; }
+  .bulb .glint { opacity: 0; }
   .todo-text::after, .tick::after { transition: none !important; }
 }

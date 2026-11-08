@@ -365,6 +365,18 @@ window.addEventListener('keydown', (e) => {
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('dblclick', (e) => e.preventDefault());
 
+/* rebuild the lights when the viewport size changes (rotation etc.) */
+let lightsResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(lightsResizeTimer);
+  lightsResizeTimer = setTimeout(() => {
+    const svg = document.querySelector('.lights');
+    if (!svg) return;
+    svg.querySelectorAll('.bulb, defs').forEach((n) => n.remove());
+    buildLights();
+  }, 250);
+});
+
 function pomoComplete(now) {
   const year = String(istParts(now).y);
   logFocus(year, pomo.durationMs);
@@ -525,6 +537,10 @@ function buildLights() {
   ];
   const counts = [6, 6, 10, 6, 9];
 
+  // bulbs scale up on small screens so they stay visible in phone UI
+  const scale = (svg.clientWidth || 700) / 780;
+  const s = Math.min(2.4, Math.max(1, 1 / Math.max(scale, 0.01)));
+
   const el = (tag, attrs) => {
     const e = document.createElementNS(NS, tag);
     for (const k in attrs) e.setAttribute(k, attrs[k]);
@@ -559,10 +575,17 @@ function buildLights() {
       const yTop = pt.y + 2;             // socket hangs just under the cable
       const g = el('g', { class: 'bulb' });
       g.style.setProperty('--bd', `${(Math.random() * -2.8).toFixed(2)}s`);
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 13).toFixed(1), r: 15, fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
-      g.appendChild(el('rect', { x: (x - 2.2).toFixed(1), y: yTop.toFixed(1), width: 4.4, height: 6, rx: 1.2, fill: '#26343F' }));
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 12).toFixed(1), r: 6, fill: `url(#bulb-glass-${ci})`, class: 'glass' }));
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 12).toFixed(1), r: 2.3, fill: '#FFFFFF', class: 'core' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 13 * s).toFixed(1), r: (15 * s).toFixed(1), fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
+      g.appendChild(el('rect', { x: (x - 2.2 * s).toFixed(1), y: yTop.toFixed(1), width: (4.4 * s).toFixed(1), height: (6 * s).toFixed(1), rx: (1.2 * s).toFixed(1), fill: '#26343F' }));
+      const gg = el('g', { transform: `translate(${x.toFixed(1)}, ${(yTop + 12 * s).toFixed(1)}) scale(${s.toFixed(2)})` });
+      gg.appendChild(el('path', {
+        d: 'M0,-7 C1,-2 2,-1 7,0 C2,1 1,2 0,7 C-1,2 -2,1 -7,0 C-2,-1 -1,-2 0,-7 Z',
+        fill: '#FFFFFF',
+        class: 'glint',
+      }));
+      g.appendChild(gg);
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 12 * s).toFixed(1), r: (6 * s).toFixed(1), fill: `url(#bulb-glass-${ci})`, class: 'glass' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 12 * s).toFixed(1), r: (2.3 * s).toFixed(1), fill: '#FFFFFF', class: 'core' }));
       svg.appendChild(g);
     }
   });
