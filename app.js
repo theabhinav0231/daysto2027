@@ -514,24 +514,56 @@ todoList.addEventListener('click', (e) => {
 function buildLights() {
   const svg = document.querySelector('.lights');
   if (!svg) return;
-  const palette = ['#FF4D4D', '#FFD24D', '#4DE28C', '#4DA8FF', '#C77DFF', '#FF9E4D'];
+  const NS = 'http://www.w3.org/2000/svg';
+  const palette = [
+    ['#FF4D4D', '#FFB3B3'],  // red
+    ['#FFC94D', '#FFE9A8'],  // warm yellow
+    ['#4DE28C', '#B0F2CE'],  // green
+    ['#4DA8FF', '#BFDFFF'],  // blue
+    ['#C77DFF', '#E8C6FF'],  // purple
+    ['#FF9E4D', '#FFD1AB'],  // orange
+  ];
   const counts = [6, 6, 10, 6, 9];
+
+  const el = (tag, attrs) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  };
+
+  // one glass gradient + one halo gradient per color
+  const defs = el('defs', {});
+  palette.forEach(([base, light], i) => {
+    const glass = el('radialGradient', { id: `bulb-glass-${i}` });
+    [['0%', light, 1], ['55%', base, 0.95], ['100%', base, 0.85]].forEach(([o, c, op]) => {
+      const s = el('stop', { offset: o, 'stop-color': c, 'stop-opacity': op });
+      glass.appendChild(s);
+    });
+    const halo = el('radialGradient', { id: `bulb-halo-${i}` });
+    [['0%', base, 0.8], ['45%', base, 0.4], ['100%', base, 0]].forEach(([o, c, op]) => {
+      const s = el('stop', { offset: o, 'stop-color': c, 'stop-opacity': op });
+      halo.appendChild(s);
+    });
+    defs.appendChild(glass);
+    defs.appendChild(halo);
+  });
+  svg.appendChild(defs);
+
   svg.querySelectorAll('path.wire').forEach((path, pi) => {
     const len = path.getTotalLength();
     const n = counts[pi] || 5;
     for (let i = 0; i < n; i++) {
       const pt = path.getPointAtLength(len * (0.06 + 0.88 * (i / (n - 1))));
-      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      c.setAttribute('cx', pt.x.toFixed(1));
-      c.setAttribute('cy', (pt.y + 7).toFixed(1));
-      c.setAttribute('r', '5');
-      const col = palette[(i + pi * 2) % palette.length];
-      c.setAttribute('fill', col);
-      c.setAttribute('class', 'bulb');
-      c.style.color = col;
-      c.style.filter = `drop-shadow(0 0 6px ${col}) drop-shadow(0 0 14px ${col})`;
-      c.style.animationDelay = `${(Math.random() * -2.8).toFixed(2)}s`;
-      svg.appendChild(c);
+      const ci = (i + pi * 2) % palette.length;
+      const x = pt.x;
+      const yTop = pt.y + 2;             // socket hangs just under the cable
+      const g = el('g', { class: 'bulb' });
+      g.style.setProperty('--bd', `${(Math.random() * -2.8).toFixed(2)}s`);
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 13).toFixed(1), r: 15, fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
+      g.appendChild(el('rect', { x: (x - 2.2).toFixed(1), y: yTop.toFixed(1), width: 4.4, height: 6, rx: 1.2, fill: '#26343F' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 12).toFixed(1), r: 6, fill: `url(#bulb-glass-${ci})`, class: 'glass' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: (yTop + 12).toFixed(1), r: 2.3, fill: '#FFFFFF', class: 'core' }));
+      svg.appendChild(g);
     }
   });
 }

@@ -120,14 +120,30 @@ button, input, select { font-family: var(--sans); }
   50%      { transform: rotate(-0.6deg); }
 }
 
-.wire { stroke: rgba(16, 48, 76, 0.32); stroke-width: 2; }
+.wire {
+  stroke: #2A4656;
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
 
-.bulb {
+/* each bulb: dark socket, glass sphere, white-hot core and a soft bloom */
+.bulb .glass { opacity: 0.95; }
+
+.bulb .halo {
+  opacity: 0.2;
   animation: lightblink 2.8s ease-in-out infinite;
+  animation-delay: var(--bd, 0s);
+}
+
+.bulb .core {
+  opacity: 0.25;
+  animation: lightblink 2.8s ease-in-out infinite;
+  animation-delay: var(--bd, 0s);
 }
 
 @keyframes lightblink {
-  0%, 100% { opacity: 0.12; }
+  0%, 100% { opacity: 0.16; }
   40%, 60% { opacity: 1; }
 }
 
@@ -835,6 +851,8 @@ button, input, select { font-family: var(--sans); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shine, .sp, .snow i, .lights, .bulb, .todo-item.just-added { animation: none !important; }
+  .shine, .sp, .snow i, .lights, .bulb .halo, .bulb .core, .todo-item.just-added { animation: none !important; }
+  .bulb .halo { opacity: 0.55; }
+  .bulb .core { opacity: 0.75; }
   .todo-text::after, .tick::after { transition: none !important; }
 }
