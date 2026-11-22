@@ -311,10 +311,10 @@ function pomoTick(now) {
   }
 }
 
-/* ————————————————— Claude FM — the real stream, via YouTube audio ————————————————— */
+/* ————————————————— Lofi radio — the real stream, via YouTube audio ————————————————— */
 
 const ICON_MUSIC = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>';
-const CLAUDE_FM_VIDEO = 'tRsQsTMvPNg'; // the Claude FM stream
+const LOFI_VIDEO = 'rFZHOHl-L8A'; // the lofi hip hop radio stream
 // Spotify alternative: swap the iframe src for
 // https://open.spotify.com/embed/playlist/4Bt32Idh1LwwUkSruVmUse (needs one click inside the player)
 
@@ -324,9 +324,9 @@ let musicFrame = null;
 function toggleMusic() {
   if (!musicOn) {
     musicFrame = document.createElement('iframe');
-    musicFrame.id = 'claudeFmPlayer';
-    musicFrame.title = 'Claude FM';
-    musicFrame.src = `https://www.youtube.com/embed/${CLAUDE_FM_VIDEO}?autoplay=1&playsinline=1&enablejsapi=1`;
+    musicFrame.id = 'lofiPlayer';
+    musicFrame.title = 'Lofi radio';
+    musicFrame.src = `https://www.youtube.com/embed/${LOFI_VIDEO}?autoplay=1&playsinline=1&enablejsapi=1`;
     musicFrame.allow = 'autoplay; encrypted-media';
     musicFrame.style.cssText = 'position:fixed;left:-9999px;bottom:0;width:320px;height:180px;opacity:0.01;pointer-events:none;border:0;';
     musicFrame.addEventListener('load', () => {
@@ -345,7 +345,7 @@ function toggleMusic() {
   const btn = $('musicBtn');
   btn.classList.toggle('on', musicOn);
   btn.setAttribute('aria-pressed', String(musicOn));
-  btn.setAttribute('aria-label', musicOn ? 'Stop Claude FM' : 'Play Claude FM');
+  btn.setAttribute('aria-label', musicOn ? 'Stop lofi radio' : 'Play lofi radio');
 }
 
 $('musicBtn').addEventListener('click', toggleMusic);

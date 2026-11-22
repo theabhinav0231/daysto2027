@@ -292,7 +292,7 @@ button, input, select { font-family: var(--sans); }
 .bulb.steady .glint,
 .bulb.steady .dim { opacity: 0; }
 
-/* ——— corner audio button (Claude FM) ——— */
+/* ——— corner audio button (lofi radio) ——— */
 
 .music-btn {
   position: fixed;
