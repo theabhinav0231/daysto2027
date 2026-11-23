@@ -258,27 +258,27 @@ button, input, select { font-family: var(--sans); }
   transform-origin: center;
 }
 
-.bulb .glass { opacity: 0.98; }
-.bulb .wash  { opacity: 0.22; }
-.bulb .aura  { opacity: 0.44; }
+.bulb .glass { opacity: 1; }
+.bulb .wash  { opacity: 0.34; }
+.bulb .aura  { opacity: 0.68; }
 
 .bulb .halo {
-  opacity: 0.85;
+  opacity: 0.95;
   animation: halo-breathe var(--tw, 3.8s) ease-in-out var(--td, 0s) infinite;
 }
 
 .bulb .bloom {
-  opacity: 0.92;
+  opacity: 0.96;
   animation: bloom-breathe var(--tw, 3.8s) ease-in-out var(--td, 0s) infinite;
 }
 
 .bulb .core {
-  opacity: 0.95;
+  opacity: 0.98;
   animation: core-flash var(--tw, 3.8s) ease-in-out var(--td, 0s) infinite;
 }
 
 .bulb .filament {
-  opacity: 0.95;
+  opacity: 1;
   animation: filament-glow var(--tw, 3.8s) ease-in-out var(--td, 0s) infinite;
 }
 
@@ -293,27 +293,27 @@ button, input, select { font-family: var(--sans); }
 }
 
 @keyframes halo-breathe {
-  0%, 100% { opacity: calc(var(--peak, 1) * 0.22); transform: scale(0.86); }
-  42%, 58% { opacity: var(--peak, 1); transform: scale(1.12); }
+  0%, 100% { opacity: calc(var(--peak, 1) * 0.62); transform: scale(0.94); }
+  42%, 58% { opacity: var(--peak, 1); transform: scale(1.14); }
 }
 
 @keyframes bloom-breathe {
-  0%, 100% { opacity: calc(var(--peak, 1) * 0.26); transform: scale(0.86); }
+  0%, 100% { opacity: calc(var(--peak, 1) * 0.66); transform: scale(0.94); }
   42%, 58% { opacity: var(--peak, 1); transform: scale(1.14); }
 }
 
 @keyframes core-flash {
-  0%, 100% { opacity: calc(var(--peak, 1) * 0.24); transform: scale(0.84); }
+  0%, 100% { opacity: calc(var(--peak, 1) * 0.68); transform: scale(0.92); }
   42%, 58% { opacity: var(--peak, 1); transform: scale(1.16); }
 }
 
 @keyframes filament-glow {
-  0%, 100% { opacity: calc(var(--peak, 1) * 0.36); }
+  0%, 100% { opacity: calc(var(--peak, 1) * 0.74); }
   42%, 58% { opacity: var(--peak, 1); }
 }
 
 @keyframes dim-breathe {
-  0%, 100% { opacity: calc(var(--peak, 1) * 0.34); }
+  0%, 100% { opacity: calc(var(--peak, 1) * 0.1); }
   42%, 58% { opacity: 0; }
 }
 

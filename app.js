@@ -355,77 +355,96 @@ function pomoTick(now) {
 
 const ICON_MUSIC = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>';
 const LOFI_VIDEO = 'rFZHOHl-L8A'; // the lofi hip hop radio stream
-const YT_EMBED_ORIGIN = 'https://www.youtube-nocookie.com';
-// Spotify alternative: swap the iframe src for
+// Spotify alternative: swap the player for
 // https://open.spotify.com/embed/playlist/4Bt32Idh1LwwUkSruVmUse (needs one click inside the player)
 
 let musicOn = false;
-let musicFrame = null;
+let ytApiPromise = null;
+let musicPlayer = null;
+let musicWrap = null;
 let syncedToLive = false;
-let ytDuration = 0;
 
-function sendMusicCmd(func, args = []) {
-  if (!musicFrame?.contentWindow) return;
-  try {
-    musicFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args }), YT_EMBED_ORIGIN);
-  } catch { /* cross-origin */ }
+function loadYouTubeApi() {
+  if (window.YT?.Player) return Promise.resolve();
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise((resolve) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prev === 'function') prev();
+      resolve();
+    };
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  });
+  return ytApiPromise;
 }
 
-window.addEventListener('message', (e) => {
-  if (!musicFrame || e.origin !== YT_EMBED_ORIGIN) return;
-  let data;
+function snapToLiveHead(player) {
+  if (!player || syncedToLive) return;
   try {
-    data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-  } catch { return; }
-  if (!data || typeof data !== 'object') return;
-
-  if (data.event === 'onReady') {
-    sendMusicCmd('playVideo');
-  }
-
-  if (data.event === 'infoDelivery' && data.info) {
-    if (typeof data.info.duration === 'number' && data.info.duration > 0) {
-      ytDuration = data.info.duration;
-    }
-    const ct = data.info.currentTime;
-    // Live DVR streams can start behind the live edge; snap once to the current live head
-    if (!syncedToLive && ytDuration > 60 && typeof ct === 'number' && (ytDuration - ct) > 20) {
+    const dur = player.getDuration?.() || 0;
+    const ct = player.getCurrentTime?.() || 0;
+    // Live DVR streams default ~1 hour behind live head in embeds; jump straight to live
+    if (dur > 60 && (dur - ct) > 15) {
       syncedToLive = true;
-      sendMusicCmd('seekTo', [ytDuration, true]);
+      player.seekTo(dur, true);
     }
-  }
-});
+  } catch { /* ignore */ }
+}
 
-function toggleMusic() {
-  if (!musicOn) {
-    syncedToLive = false;
-    ytDuration = 0;
-    const originParam = location.origin.startsWith('http') ? `&origin=${encodeURIComponent(location.origin)}` : '';
-    musicFrame = document.createElement('iframe');
-    musicFrame.id = 'lofiPlayer';
-    musicFrame.title = 'Lofi radio';
-    musicFrame.referrerPolicy = 'strict-origin-when-cross-origin';
-    musicFrame.src = `${YT_EMBED_ORIGIN}/embed/${LOFI_VIDEO}?autoplay=1&playsinline=1&enablejsapi=1&rel=0${originParam}`;
-    musicFrame.allow = 'autoplay; encrypted-media';
-    musicFrame.style.cssText = 'position:fixed;left:-9999px;bottom:0;width:320px;height:180px;opacity:0.01;pointer-events:none;border:0;';
-    musicFrame.addEventListener('load', () => {
-      try {
-        musicFrame.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1 }), YT_EMBED_ORIGIN);
-      } catch { /* cross-origin */ }
-      sendMusicCmd('playVideo');
-    });
-    document.body.appendChild(musicFrame);
-    musicOn = true;
-  } else {
-    musicFrame?.remove();
-    musicFrame = null;
-    musicOn = false;
-  }
+function destroyMusicPlayer() {
+  try { musicPlayer?.destroy(); } catch { /* ignore */ }
+  musicPlayer = null;
+  musicWrap?.remove();
+  musicWrap = null;
+  syncedToLive = false;
+}
 
+async function toggleMusic() {
+  musicOn = !musicOn;
   const btn = $('musicBtn');
   btn.classList.toggle('on', musicOn);
   btn.setAttribute('aria-pressed', String(musicOn));
   btn.setAttribute('aria-label', musicOn ? 'Stop lofi radio' : 'Play lofi radio');
+
+  if (!musicOn) {
+    destroyMusicPlayer();
+    return;
+  }
+
+  syncedToLive = false;
+  musicWrap = document.createElement('div');
+  musicWrap.style.cssText = 'position:fixed;left:-9999px;bottom:0;width:320px;height:180px;opacity:0.01;pointer-events:none;border:0;';
+  const slot = document.createElement('div');
+  slot.id = 'lofiPlayer';
+  musicWrap.appendChild(slot);
+  document.body.appendChild(musicWrap);
+
+  await loadYouTubeApi();
+  if (!musicOn || !musicWrap) return;
+
+  const playerVars = { autoplay: 1, playsinline: 1, rel: 0 };
+  if (location.origin.startsWith('http')) playerVars.origin = location.origin;
+
+  musicPlayer = new window.YT.Player(slot, {
+    width: 320,
+    height: 180,
+    videoId: LOFI_VIDEO,
+    playerVars,
+    events: {
+      onReady(e) {
+        if (!musicOn) return;
+        e.target.playVideo();
+      },
+      onStateChange(e) {
+        if (!musicOn) return;
+        if (e.data === window.YT.PlayerState.PLAYING || e.data === window.YT.PlayerState.BUFFERING) {
+          snapToLiveHead(e.target);
+        }
+      },
+    },
+  });
 }
 
 $('musicBtn').addEventListener('click', toggleMusic);
@@ -819,12 +838,12 @@ function buildLights() {
   if (!svg) return;
   const NS = 'http://www.w3.org/2000/svg';
   const palette = [
-    ['#E8F0F8', '#FFFFFF', '#98AEC6'],  // white-silver
-    ['#C9DCF0', '#F4F9FF', '#7395B8'],  // frosted silver-blue
-    ['#F2F5F8', '#FFFFFF', '#A3B2C2'],  // starlight silver
-    ['#7CC9FF', '#DAF0FF', '#2F7EC4'],  // winter frost blue
-    ['#FF847A', '#FFD3CE', '#BE443E'],  // festive coral-ruby
-    ['#E2ECF6', '#FFFFFF', '#8CA6C2'],  // cool white-silver
+    ['#EAF4FF', '#FFFFFF', '#7FB4E6'],  // crisp white-silver
+    ['#CFE7FF', '#FFFFFF', '#599CE0'],  // bright silver-blue
+    ['#FFFFFF', '#FFFFFF', '#98B8D8'],  // diamond white-silver
+    ['#5EB8FF', '#E2F3FF', '#287FD1'],  // vivid winter frost blue
+    ['#FF6B63', '#FFD6D4', '#C93832'],  // crisp festive ruby
+    ['#DFEEFC', '#FFFFFF', '#76A6D6'],  // cool pearl silver
   ];
   const counts = [7, 6, 6, 7, 6, 6];
   const rand = (min, max) => min + Math.random() * (max - min);
@@ -902,7 +921,7 @@ function buildLights() {
       const ci = (i + pi * 2) % palette.length;
       const x = pt.x;
       const yTop = pt.y + 1.5;           // socket hangs just under the cable
-      const cy = yTop + 10.5 * s;
+      const cy = yTop + 12 * s;
       const tw = rand(3.4, 6.8);         // each bulb breathes on its own clock
       const td = rand(-tw, 0);
       const swayDur = rand(5.5, 10);
@@ -911,33 +930,33 @@ function buildLights() {
       const g = el('g', { class: 'bulb' });
       g.style.setProperty('--tw', `${tw.toFixed(2)}s`);
       g.style.setProperty('--td', `${td.toFixed(2)}s`);
-      g.style.setProperty('--peak', rand(0.76, 1).toFixed(2));
+      g.style.setProperty('--peak', rand(0.86, 1).toFixed(2));
       g.style.setProperty('--sway-dur', `${swayDur.toFixed(2)}s`);
       g.style.setProperty('--sway-delay', `${swayDelay.toFixed(2)}s`);
       g.style.setProperty('--pivot', `${x.toFixed(1)}px ${yTop.toFixed(1)}px`);
-      if (Math.random() < 0.2) g.classList.add('steady');
+      if (Math.random() < 0.25) g.classList.add('steady');
 
       // wide warm wash that lets the string light the winter sky around it
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (34 * s).toFixed(1), fill: 'url(#bulb-wash)', class: 'wash' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (38 * s).toFixed(1), fill: 'url(#bulb-wash)', class: 'wash' }));
       // wide ambient tint
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (38 * s).toFixed(1), fill: `url(#bulb-aura-${ci})`, class: 'aura' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (42 * s).toFixed(1), fill: `url(#bulb-aura-${ci})`, class: 'aura' }));
       // soft colored halo
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (22 * s).toFixed(1), fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (25 * s).toFixed(1), fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
       // socket: dark cap + faint metal highlight
-      g.appendChild(el('rect', { x: (x - 2.2 * s).toFixed(1), y: yTop.toFixed(1), width: (4.4 * s).toFixed(1), height: (6 * s).toFixed(1), rx: (1.2 * s).toFixed(1), fill: '#14202D' }));
-      g.appendChild(el('rect', { x: (x - 1.9 * s).toFixed(1), y: (yTop + 0.5 * s).toFixed(1), width: (3.8 * s).toFixed(1), height: (1.1 * s).toFixed(1), rx: (0.5 * s).toFixed(1), fill: '#6E8396', opacity: '0.55' }));
+      g.appendChild(el('rect', { x: (x - 2.4 * s).toFixed(1), y: yTop.toFixed(1), width: (4.8 * s).toFixed(1), height: (6.4 * s).toFixed(1), rx: (1.2 * s).toFixed(1), fill: '#14202D' }));
+      g.appendChild(el('rect', { x: (x - 2.1 * s).toFixed(1), y: (yTop + 0.5 * s).toFixed(1), width: (4.2 * s).toFixed(1), height: (1.1 * s).toFixed(1), rx: (0.5 * s).toFixed(1), fill: '#7B93A8', opacity: '0.65' }));
       // white bloom behind the glass
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (12 * s).toFixed(1), fill: 'url(#bulb-bloom)', class: 'bloom' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (14 * s).toFixed(1), fill: 'url(#bulb-bloom)', class: 'bloom' }));
       // glass bulb + specular glint
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (5.6 * s).toFixed(1), fill: `url(#bulb-glass-${ci})`, stroke: palette[ci][2], 'stroke-opacity': '0.45', 'stroke-width': (0.55 * s).toFixed(2), class: 'glass' }));
-      const specX = x - 1.9 * s;
-      const specY = cy - 2.2 * s;
-      g.appendChild(el('ellipse', { cx: specX.toFixed(1), cy: specY.toFixed(1), rx: (1.2 * s).toFixed(1), ry: (1.8 * s).toFixed(1), fill: '#FFFFFF', opacity: '0.62', transform: `rotate(-30 ${specX.toFixed(1)} ${specY.toFixed(1)})`, class: 'spec' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (6.6 * s).toFixed(1), fill: `url(#bulb-glass-${ci})`, stroke: palette[ci][2], 'stroke-opacity': '0.55', 'stroke-width': (0.65 * s).toFixed(2), class: 'glass' }));
+      const specX = x - 2.2 * s;
+      const specY = cy - 2.5 * s;
+      g.appendChild(el('ellipse', { cx: specX.toFixed(1), cy: specY.toFixed(1), rx: (1.4 * s).toFixed(1), ry: (2.1 * s).toFixed(1), fill: '#FFFFFF', opacity: '0.72', transform: `rotate(-30 ${specX.toFixed(1)} ${specY.toFixed(1)})`, class: 'spec' }));
       // dark glass tint that fades in as the filament cools
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (5.5 * s).toFixed(1), fill: '#061322', class: 'dim' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (6.5 * s).toFixed(1), fill: '#061322', class: 'dim' }));
       // white-hot center
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (3.4 * s).toFixed(1), fill: 'url(#bulb-core)', class: 'core' }));
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (1.1 * s).toFixed(1), fill: '#FFFFFF', class: 'filament' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (4.2 * s).toFixed(1), fill: 'url(#bulb-core)', class: 'core' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (1.35 * s).toFixed(1), fill: '#FFFFFF', class: 'filament' }));
 
       // occasional star glint at the brightest part of the cycle
       if (Math.random() < 0.72) {
