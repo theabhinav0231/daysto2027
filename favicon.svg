@@ -1,21 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Days to 2027">
   <defs>
-    <linearGradient id="bg" x1="10" y1="2" x2="52" y2="62" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#7CC8F4"/>
-      <stop offset=".48" stop-color="#3B9AE1"/>
-      <stop offset="1" stop-color="#0B2B47"/>
+    <linearGradient id="bg" x1="8" y1="0" x2="56" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#06101E"/>
+      <stop offset=".52" stop-color="#0E2544"/>
+      <stop offset="1" stop-color="#193F6D"/>
     </linearGradient>
-    <radialGradient id="gloss" cx="0" cy="0" r="1" gradientTransform="translate(16 10) rotate(43) scale(48)" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
-      <stop offset=".5" stop-color="#fff" stop-opacity=".1"/>
-      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(20 12) rotate(42) scale(52)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9DCBF4" stop-opacity=".34"/>
+      <stop offset=".5" stop-color="#7EB8E8" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#06101E" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="num" x1="20" y1="22" x2="45" y2="47" gradientUnits="userSpaceOnUse">
+    <linearGradient id="num" x1="18" y1="18" x2="46" y2="49" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="1" stop-color="#D6EDFF"/>
+      <stop offset=".55" stop-color="#CBE5FA"/>
+      <stop offset="1" stop-color="#87BCEB"/>
     </linearGradient>
     <filter id="sparkGlow" x="-100%" y="-100%" width="300%" height="300%">
-      <feGaussianBlur stdDeviation="1.3" result="blur"/>
+      <feGaussianBlur stdDeviation="1.6" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -25,12 +26,13 @@
   </defs>
   <g clip-path="url(#clip)">
     <rect width="64" height="64" fill="url(#bg)"/>
-    <rect width="64" height="64" fill="url(#gloss)"/>
-    <circle cx="10" cy="51" r="1.2" fill="#fff" opacity=".35"/>
-    <circle cx="55" cy="46" r="1.5" fill="#fff" opacity=".22"/>
-    <circle cx="47" cy="11" r="1" fill="#fff" opacity=".4"/>
-    <text x="30.5" y="45.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" letter-spacing="-2.2" fill="url(#num)">27</text>
-    <path d="M52 7 L53.5 11.5 L58 13 L53.5 14.5 L52 19 L50.5 14.5 L46 13 L50.5 11.5 Z" fill="#FFD45C" filter="url(#sparkGlow)"/>
+    <rect width="64" height="64" fill="url(#glow)"/>
+    <circle cx="11" cy="52" r="1.2" fill="#DCEFFF" opacity=".42"/>
+    <circle cx="54" cy="48" r="1.4" fill="#CBE5FA" opacity=".28"/>
+    <circle cx="14" cy="14" r="1" fill="#FFFFFF" opacity=".45"/>
+    <circle cx="43" cy="11" r=".9" fill="#B8DDF8" opacity=".4"/>
+    <text x="30.5" y="45" text-anchor="middle" font-family="'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="33" font-weight="600" letter-spacing="-1.6" fill="url(#num)">27</text>
+    <path d="M51.5 7 L53 11.4 L57.5 13 L53 14.6 L51.5 19 L50 14.6 L45.5 13 L50 11.4 Z" fill="#E8F6FF" filter="url(#sparkGlow)"/>
   </g>
-  <rect x=".75" y=".75" width="62.5" height="62.5" rx="14.25" fill="none" stroke="#fff" stroke-opacity=".26" stroke-width="1.5"/>
+  <rect x=".75" y=".75" width="62.5" height="62.5" rx="14.25" fill="none" stroke="#CBE5FA" stroke-opacity=".26" stroke-width="1.5"/>
 </svg>

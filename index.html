@@ -6,11 +6,11 @@
   <meta name="description" content="Days to 2027 — a quiet IST countdown with calendar, pomodoro focus timer and work to-do.">
   <meta name="theme-color" content="#081426">
   <title>Days to 2027</title>
-  <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=6">
   <script>
     try {
       if (JSON.parse(localStorage.getItem('theme:v1')) === 'dark') {
@@ -43,10 +43,7 @@
   <div class="page">
     <header class="masthead">
       <h1 class="site-title">Days to <span class="shine">2027<i class="sp sp1" aria-hidden="true"></i><i class="sp sp2" aria-hidden="true"></i><i class="sp sp3" aria-hidden="true"></i><i class="sp sp4" aria-hidden="true"></i><i class="sp sp5" aria-hidden="true"></i><i class="sp sp6" aria-hidden="true"></i></span></h1>
-      <div class="now-pill">
-        <span class="live-dot" aria-hidden="true"></span>
-        <p class="now-line" id="nowLine">&nbsp;</p>
-      </div>
+      <p class="now-line" id="nowLine">&nbsp;</p>
     </header>
 
     <main class="mid">
@@ -99,10 +96,7 @@
       </section>
 
       <section class="glass card-pomodoro" aria-label="Pomodoro timer" id="pomoCard">
-        <div class="pomo-head">
-          <p class="panel-label">Pomodoro</p>
-          <span class="pomo-status" id="pomoStatus">Ready</span>
-        </div>
+        <p class="panel-label">Pomodoro</p>
         <div class="pomo-main">
           <div class="pomo-timer">
             <div class="pomo-display" id="pomoDisplay"></div>
@@ -148,6 +142,6 @@
     </main>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

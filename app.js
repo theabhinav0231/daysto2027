@@ -232,8 +232,6 @@ function updateControls() {
   $('pomoCard').classList.toggle('running', running);
   $('pomoPlay').innerHTML = running ? ICON_STOP : ICON_PLAY;
   $('pomoPlay').setAttribute('aria-label', running ? 'Stop and reset timer' : 'Start timer');
-  const status = $('pomoStatus');
-  if (status) status.textContent = running ? 'Focusing' : 'Ready';
 }
 
 let noteTimer = null;
@@ -357,24 +355,64 @@ function pomoTick(now) {
 
 const ICON_MUSIC = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>';
 const LOFI_VIDEO = 'rFZHOHl-L8A'; // the lofi hip hop radio stream
+const YT_EMBED_ORIGIN = 'https://www.youtube-nocookie.com';
 // Spotify alternative: swap the iframe src for
 // https://open.spotify.com/embed/playlist/4Bt32Idh1LwwUkSruVmUse (needs one click inside the player)
 
 let musicOn = false;
 let musicFrame = null;
+let syncedToLive = false;
+let ytDuration = 0;
+
+function sendMusicCmd(func, args = []) {
+  if (!musicFrame?.contentWindow) return;
+  try {
+    musicFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args }), YT_EMBED_ORIGIN);
+  } catch { /* cross-origin */ }
+}
+
+window.addEventListener('message', (e) => {
+  if (!musicFrame || e.origin !== YT_EMBED_ORIGIN) return;
+  let data;
+  try {
+    data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+  } catch { return; }
+  if (!data || typeof data !== 'object') return;
+
+  if (data.event === 'onReady') {
+    sendMusicCmd('playVideo');
+  }
+
+  if (data.event === 'infoDelivery' && data.info) {
+    if (typeof data.info.duration === 'number' && data.info.duration > 0) {
+      ytDuration = data.info.duration;
+    }
+    const ct = data.info.currentTime;
+    // Live DVR streams can start behind the live edge; snap once to the current live head
+    if (!syncedToLive && ytDuration > 60 && typeof ct === 'number' && (ytDuration - ct) > 20) {
+      syncedToLive = true;
+      sendMusicCmd('seekTo', [ytDuration, true]);
+    }
+  }
+});
 
 function toggleMusic() {
   if (!musicOn) {
+    syncedToLive = false;
+    ytDuration = 0;
+    const originParam = location.origin.startsWith('http') ? `&origin=${encodeURIComponent(location.origin)}` : '';
     musicFrame = document.createElement('iframe');
     musicFrame.id = 'lofiPlayer';
     musicFrame.title = 'Lofi radio';
-    musicFrame.src = `https://www.youtube.com/embed/${LOFI_VIDEO}?autoplay=1&playsinline=1&enablejsapi=1`;
+    musicFrame.referrerPolicy = 'strict-origin-when-cross-origin';
+    musicFrame.src = `${YT_EMBED_ORIGIN}/embed/${LOFI_VIDEO}?autoplay=1&playsinline=1&enablejsapi=1&rel=0${originParam}`;
     musicFrame.allow = 'autoplay; encrypted-media';
     musicFrame.style.cssText = 'position:fixed;left:-9999px;bottom:0;width:320px;height:180px;opacity:0.01;pointer-events:none;border:0;';
     musicFrame.addEventListener('load', () => {
       try {
-        musicFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+        musicFrame.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1 }), YT_EMBED_ORIGIN);
       } catch { /* cross-origin */ }
+      sendMusicCmd('playVideo');
     });
     document.body.appendChild(musicFrame);
     musicOn = true;
@@ -755,7 +793,7 @@ function buildStars() {
   const count = window.innerWidth > 900 ? 44 : 24;
   const rand = (min, max) => min + Math.random() * (max - min);
   const frag = document.createDocumentFragment();
-  const colors = ['#FFFFFF', '#FFFFFF', '#D8EEFF', '#FFF1CC'];
+  const colors = ['#FFFFFF', '#FFFFFF', '#DCEEFF', '#E6EDF5'];
 
   for (let i = 0; i < count; i++) {
     const star = document.createElement('i');
@@ -781,12 +819,12 @@ function buildLights() {
   if (!svg) return;
   const NS = 'http://www.w3.org/2000/svg';
   const palette = [
-    ['#FFD479', '#FFF3CA', '#C98E24'],  // champagne gold
-    ['#FFB259', '#FFE1B5', '#C26E1B'],  // warm amber
-    ['#FFF0CE', '#FFFFFF', '#CBB07E'],  // warm Edison pearl
+    ['#E8F0F8', '#FFFFFF', '#98AEC6'],  // white-silver
+    ['#C9DCF0', '#F4F9FF', '#7395B8'],  // frosted silver-blue
+    ['#F2F5F8', '#FFFFFF', '#A3B2C2'],  // starlight silver
     ['#7CC9FF', '#DAF0FF', '#2F7EC4'],  // winter frost blue
     ['#FF847A', '#FFD3CE', '#BE443E'],  // festive coral-ruby
-    ['#FFD479', '#FFF3CA', '#C98E24'],  // champagne gold
+    ['#E2ECF6', '#FFFFFF', '#8CA6C2'],  // cool white-silver
   ];
   const counts = [7, 6, 6, 7, 6, 6];
   const rand = (min, max) => min + Math.random() * (max - min);
