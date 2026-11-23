@@ -4,6 +4,7 @@
 /* ————————————————— constants & helpers ————————————————— */
 
 const IST = 'Asia/Kolkata';
+const YEAR_START = Date.parse('2026-01-01T00:00:00+05:30'); // start of 2026, IST
 const TARGET     = Date.parse('2027-01-01T00:00:00+05:30'); // midnight that starts 2027, IST
 const BASE_TITLE = document.title;
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -96,6 +97,22 @@ function renderCountdown(now) {
   setChars($('cdHours'), pad(hours));
   setChars($('cdMins'), pad(mins));
   setChars($('cdSecs'), pad(secs));
+  renderYearProgress(now);
+}
+
+function renderYearProgress(now) {
+  const fill = $('yearFill');
+  const pctEl = $('yearPct');
+  const track = $('yearTrack');
+  if (!fill || !pctEl || !track) return;
+  const pct = Math.max(0, Math.min(100, ((now - YEAR_START) / (TARGET - YEAR_START)) * 100));
+  const pctStr = pct.toFixed(1);
+  if (pctEl.dataset.val !== pctStr) {
+    pctEl.dataset.val = pctStr;
+    pctEl.textContent = `${pctStr}% of 2026`;
+    fill.style.width = `${pct.toFixed(2)}%`;
+    track.setAttribute('aria-valuenow', pctStr);
+  }
 }
 
 /* ————————————————— calendar ————————————————— */
@@ -117,17 +134,25 @@ function renderCalendar() {
   const grid = $('calDays');
   grid.textContent = '';
 
-  const addCell = (num, cls) => {
+  const addCell = (num, cls, title) => {
     const el = document.createElement('div');
     el.className = 'day' + (cls ? ' ' + cls : '');
     el.textContent = num;
+    if (title) el.title = title;
     grid.appendChild(el);
   };
 
   for (let i = firstDow - 1; i >= 0; i--) addCell(prevDim - i, 'out');
   for (let d = 1; d <= dim; d++) {
     const dow = new Date(Date.UTC(cal.y, cal.m, d, 12)).getUTCDay();
-    addCell(d, (isCurrentMonth && d === today.d ? 'today' : '') + (dow === 0 ? ' sun' : ''));
+    const isNewYear = cal.y === 2027 && cal.m === 0 && d === 1;
+    addCell(
+      d,
+      (isCurrentMonth && d === today.d ? 'today' : '') +
+        (dow === 0 ? ' sun' : '') +
+        (isNewYear ? ' new-year' : ''),
+      isNewYear ? 'Happy New Year 2027!' : ''
+    );
   }
   const trailing = (7 - ((firstDow + dim) % 7)) % 7;
   for (let d = 1; d <= trailing; d++) addCell(d, 'out');
@@ -140,6 +165,14 @@ $('calPrev').addEventListener('click', () => {
 $('calNext').addEventListener('click', () => {
   cal.m++; if (cal.m > 11) { cal.m = 0; cal.y++; }
   renderCalendar();
+});
+$('calTitle').addEventListener('click', () => {
+  const today = istParts();
+  if (cal.y !== today.y || cal.m !== today.m - 1) {
+    cal.y = today.y;
+    cal.m = today.m - 1;
+    renderCalendar();
+  }
 });
 
 /* ————————————————— pomodoro ————————————————— */
@@ -182,6 +215,13 @@ function fmtClock(ms) {
 
 function renderPomo() {
   setChars($('pomoDisplay'), fmtClock(pomo.state === 'idle' ? pomo.durationMs : pomo.remainingMs));
+  const bar = $('pomoProgress');
+  if (bar) {
+    const pct = pomo.state === 'running' && pomo.durationMs > 0
+      ? Math.max(0, Math.min(100, ((pomo.durationMs - pomo.remainingMs) / pomo.durationMs) * 100))
+      : 0;
+    bar.style.width = `${pct.toFixed(2)}%`;
+  }
 }
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
@@ -192,6 +232,8 @@ function updateControls() {
   $('pomoCard').classList.toggle('running', running);
   $('pomoPlay').innerHTML = running ? ICON_STOP : ICON_PLAY;
   $('pomoPlay').setAttribute('aria-label', running ? 'Stop and reset timer' : 'Start timer');
+  const status = $('pomoStatus');
+  if (status) status.textContent = running ? 'Focusing' : 'Ready';
 }
 
 let noteTimer = null;
@@ -349,6 +391,37 @@ function toggleMusic() {
 }
 
 $('musicBtn').addEventListener('click', toggleMusic);
+
+/* ————————————————— Pure black dark mode toggle ————————————————— */
+
+const ICON_MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>';
+const ICON_MOON_FILL = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>';
+
+let darkMode = store.get('theme:v1', 'twilight') === 'dark';
+
+function applyTheme(isDark) {
+  darkMode = !!isDark;
+  if (darkMode) {
+    document.documentElement.dataset.theme = 'dark';
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
+  store.set('theme:v1', darkMode ? 'dark' : 'twilight');
+
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', darkMode ? '#000000' : '#081426');
+
+  const btn = $('themeBtn');
+  if (!btn) return;
+  btn.classList.toggle('on', darkMode);
+  btn.setAttribute('aria-pressed', String(darkMode));
+  btn.setAttribute('aria-label', darkMode ? 'Switch to winter twilight theme' : 'Enable pure black dark mode');
+  btn.innerHTML =
+    `<span class="theme-icon" aria-hidden="true">${darkMode ? ICON_MOON_FILL : ICON_MOON}</span>` +
+    `<span class="theme-label">Dark</span>`;
+}
+
+$('themeBtn')?.addEventListener('click', () => applyTheme(!darkMode));
 
 /* ————————————————— block browser zoom (pinch, ctrl+wheel, ctrl+±) ————————————————— */
 
@@ -672,26 +745,55 @@ function buildSnowTopRight() {
   layer.appendChild(frag);
 }
 
-/* ————————————————— string lights (top-left swags) ————————————————— */
+/* ————————————————— winter night starfield ————————————————— */
+
+function buildStars() {
+  const layer = $('stars');
+  if (!layer) return;
+  layer.textContent = '';
+
+  const count = window.innerWidth > 900 ? 44 : 24;
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const frag = document.createDocumentFragment();
+  const colors = ['#FFFFFF', '#FFFFFF', '#D8EEFF', '#FFF1CC'];
+
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('i');
+    const size = rand(1.1, 2.3);
+    const dur = rand(3.6, 8.2);
+    star.style.cssText =
+      `--sx:${rand(2, 98).toFixed(2)}%;` +
+      `--sy:${rand(4, 94).toFixed(2)}%;` +
+      `--ss:${size.toFixed(1)}px;` +
+      `--so:${rand(0.24, 0.72).toFixed(2)};` +
+      `--sc:${colors[i % colors.length]};` +
+      `--sd:${dur.toFixed(1)}s;` +
+      `--sdel:${rand(-dur, 0).toFixed(1)}s`;
+    frag.appendChild(star);
+  }
+  layer.appendChild(frag);
+}
+
+/* ————————————————— string lights (full-width arched swags) ————————————————— */
 
 function buildLights() {
   const svg = document.querySelector('.lights');
   if (!svg) return;
   const NS = 'http://www.w3.org/2000/svg';
   const palette = [
-    ['#FF4D4D', '#FFC4C4', '#C22F3C'],  // red
-    ['#FFC94D', '#FFEBB0', '#D79B22'],  // warm yellow
-    ['#4DE28C', '#B6F5D2', '#21A65C'],  // green
-    ['#4DA8FF', '#C4E2FF', '#2676C9'],  // blue
-    ['#C77DFF', '#E9C9FF', '#8B4CC4'],  // purple
-    ['#FF9E4D', '#FFD6B5', '#D76F1F'],  // orange
+    ['#FFD479', '#FFF3CA', '#C98E24'],  // champagne gold
+    ['#FFB259', '#FFE1B5', '#C26E1B'],  // warm amber
+    ['#FFF0CE', '#FFFFFF', '#CBB07E'],  // warm Edison pearl
+    ['#7CC9FF', '#DAF0FF', '#2F7EC4'],  // winter frost blue
+    ['#FF847A', '#FFD3CE', '#BE443E'],  // festive coral-ruby
+    ['#FFD479', '#FFF3CA', '#C98E24'],  // champagne gold
   ];
-  const counts = [6, 6, 10, 6, 9];
+  const counts = [7, 6, 6, 7, 6, 6];
   const rand = (min, max) => min + Math.random() * (max - min);
 
-  // bulbs scale up on small screens so they stay visible in phone UI
-  const scale = (svg.clientWidth || 700) / 780;
-  const s = Math.min(2.4, Math.max(1, 1 / Math.max(scale, 0.01)));
+  // bulbs scale gracefully across desktop and phone viewports
+  const scale = (svg.clientWidth || 1440) / 1440;
+  const s = Math.min(2.0, Math.max(0.95, 1 / Math.max(scale, 0.01)));
 
   const el = (tag, attrs) => {
     const e = document.createElementNS(NS, tag);
@@ -761,9 +863,9 @@ function buildLights() {
       const pt = path.getPointAtLength(len * (0.06 + 0.88 * (i / (n - 1))));
       const ci = (i + pi * 2) % palette.length;
       const x = pt.x;
-      const yTop = pt.y + 2;             // socket hangs just under the cable
-      const cy = yTop + 12 * s;
-      const tw = rand(3.2, 6.4);         // each bulb breathes on its own clock
+      const yTop = pt.y + 1.5;           // socket hangs just under the cable
+      const cy = yTop + 10.5 * s;
+      const tw = rand(3.4, 6.8);         // each bulb breathes on its own clock
       const td = rand(-tw, 0);
       const swayDur = rand(5.5, 10);
       const swayDelay = rand(-swayDur, 0);
@@ -771,33 +873,33 @@ function buildLights() {
       const g = el('g', { class: 'bulb' });
       g.style.setProperty('--tw', `${tw.toFixed(2)}s`);
       g.style.setProperty('--td', `${td.toFixed(2)}s`);
-      g.style.setProperty('--peak', rand(0.72, 1).toFixed(2));
+      g.style.setProperty('--peak', rand(0.76, 1).toFixed(2));
       g.style.setProperty('--sway-dur', `${swayDur.toFixed(2)}s`);
       g.style.setProperty('--sway-delay', `${swayDelay.toFixed(2)}s`);
       g.style.setProperty('--pivot', `${x.toFixed(1)}px ${yTop.toFixed(1)}px`);
-      if (Math.random() < 0.18) g.classList.add('steady');
+      if (Math.random() < 0.2) g.classList.add('steady');
 
-      // wide white wash that lets the string light the sky around it
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (30 * s).toFixed(1), fill: 'url(#bulb-wash)', class: 'wash' }));
+      // wide warm wash that lets the string light the winter sky around it
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (34 * s).toFixed(1), fill: 'url(#bulb-wash)', class: 'wash' }));
       // wide ambient tint
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (32 * s).toFixed(1), fill: `url(#bulb-aura-${ci})`, class: 'aura' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (38 * s).toFixed(1), fill: `url(#bulb-aura-${ci})`, class: 'aura' }));
       // soft colored halo
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (18 * s).toFixed(1), fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (22 * s).toFixed(1), fill: `url(#bulb-halo-${ci})`, class: 'halo' }));
       // socket: dark cap + faint metal highlight
-      g.appendChild(el('rect', { x: (x - 2.6 * s).toFixed(1), y: yTop.toFixed(1), width: (5.2 * s).toFixed(1), height: (7 * s).toFixed(1), rx: (1.4 * s).toFixed(1), fill: '#1B2A35' }));
-      g.appendChild(el('rect', { x: (x - 2.3 * s).toFixed(1), y: (yTop + 0.5 * s).toFixed(1), width: (4.6 * s).toFixed(1), height: (1.2 * s).toFixed(1), rx: (0.6 * s).toFixed(1), fill: '#5A6E7C', opacity: '0.55' }));
+      g.appendChild(el('rect', { x: (x - 2.2 * s).toFixed(1), y: yTop.toFixed(1), width: (4.4 * s).toFixed(1), height: (6 * s).toFixed(1), rx: (1.2 * s).toFixed(1), fill: '#14202D' }));
+      g.appendChild(el('rect', { x: (x - 1.9 * s).toFixed(1), y: (yTop + 0.5 * s).toFixed(1), width: (3.8 * s).toFixed(1), height: (1.1 * s).toFixed(1), rx: (0.5 * s).toFixed(1), fill: '#6E8396', opacity: '0.55' }));
       // white bloom behind the glass
       g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (12 * s).toFixed(1), fill: 'url(#bulb-bloom)', class: 'bloom' }));
       // glass bulb + specular glint
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (6.8 * s).toFixed(1), fill: `url(#bulb-glass-${ci})`, stroke: palette[ci][2], 'stroke-opacity': '0.5', 'stroke-width': (0.6 * s).toFixed(2), class: 'glass' }));
-      const specX = x - 2.4 * s;
-      const specY = cy - 2.8 * s;
-      g.appendChild(el('ellipse', { cx: specX.toFixed(1), cy: specY.toFixed(1), rx: (1.5 * s).toFixed(1), ry: (2.2 * s).toFixed(1), fill: '#FFFFFF', opacity: '0.58', transform: `rotate(-30 ${specX.toFixed(1)} ${specY.toFixed(1)})`, class: 'spec' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (5.6 * s).toFixed(1), fill: `url(#bulb-glass-${ci})`, stroke: palette[ci][2], 'stroke-opacity': '0.45', 'stroke-width': (0.55 * s).toFixed(2), class: 'glass' }));
+      const specX = x - 1.9 * s;
+      const specY = cy - 2.2 * s;
+      g.appendChild(el('ellipse', { cx: specX.toFixed(1), cy: specY.toFixed(1), rx: (1.2 * s).toFixed(1), ry: (1.8 * s).toFixed(1), fill: '#FFFFFF', opacity: '0.62', transform: `rotate(-30 ${specX.toFixed(1)} ${specY.toFixed(1)})`, class: 'spec' }));
       // dark glass tint that fades in as the filament cools
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (6.7 * s).toFixed(1), fill: '#061A2B', class: 'dim' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (5.5 * s).toFixed(1), fill: '#061322', class: 'dim' }));
       // white-hot center
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (4 * s).toFixed(1), fill: 'url(#bulb-core)', class: 'core' }));
-      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (1.2 * s).toFixed(1), fill: '#FFFFFF', class: 'filament' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (3.4 * s).toFixed(1), fill: 'url(#bulb-core)', class: 'core' }));
+      g.appendChild(el('circle', { cx: x.toFixed(1), cy: cy.toFixed(1), r: (1.1 * s).toFixed(1), fill: '#FFFFFF', class: 'filament' }));
 
       // occasional star glint at the brightest part of the cycle
       if (Math.random() < 0.72) {
@@ -843,10 +945,15 @@ function tick() {
   setDurationFromMinutes(30); // default 30 min
   renderFocusFoot();
   buildTodoList();
+  buildStars();
   buildSnow();
   buildSnowTopRight();
   buildLights();
-  $('musicBtn').innerHTML = ICON_MUSIC;
+  $('musicBtn').innerHTML =
+    `<span class="music-icon" aria-hidden="true">${ICON_MUSIC}</span>` +
+    `<span class="eq-bars" aria-hidden="true"><i></i><i></i><i></i></span>` +
+    `<span class="music-label">Lofi</span>`;
+  applyTheme(darkMode);
 
   tick();
   setInterval(tick, 250);

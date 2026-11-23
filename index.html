@@ -4,20 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Days to 2027 — a quiet IST countdown with calendar, pomodoro focus timer and work to-do.">
-  <meta name="theme-color" content="#A9D6F1">
+  <meta name="theme-color" content="#081426">
   <title>Days to 2027</title>
   <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=4">
+  <script>
+    try {
+      if (JSON.parse(localStorage.getItem('theme:v1')) === 'dark') {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    } catch {}
+  </script>
 </head>
 <body>
   <div class="sky" aria-hidden="true">
+    <div class="aurora"></div>
+    <div class="stars" id="stars"></div>
     <div class="grain"></div>
-    <svg class="lights" viewBox="0 0 780 210" aria-hidden="true">
-      <path class="wire" vector-effect="non-scaling-stroke" d="M56,-4 Q160,150 300,2" fill="none"/>
-      <path class="wire" vector-effect="non-scaling-stroke" d="M300,2 Q420,150 540,2" fill="none"/>
-      <path class="wire" vector-effect="non-scaling-stroke" d="M56,-4 Q300,240 540,2" fill="none"/>
-      <path class="wire" vector-effect="non-scaling-stroke" d="M540,2 Q650,150 760,2" fill="none"/>
-      <path class="wire" vector-effect="non-scaling-stroke" d="M300,2 Q530,270 760,2" fill="none"/>
+    <svg class="lights" viewBox="0 0 1440 165" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+      <path class="wire" vector-effect="non-scaling-stroke" d="M-20,-6 Q165,108 380,8" fill="none"/>
+      <path class="wire" vector-effect="non-scaling-stroke" d="M380,8 Q550,54 720,4" fill="none"/>
+      <path class="wire" vector-effect="non-scaling-stroke" d="M720,4 Q890,54 1060,8" fill="none"/>
+      <path class="wire" vector-effect="non-scaling-stroke" d="M1060,8 Q1275,108 1460,-6" fill="none"/>
+      <path class="wire wire-deep" vector-effect="non-scaling-stroke" d="M-20,24 Q145,148 345,10" fill="none"/>
+      <path class="wire wire-deep" vector-effect="non-scaling-stroke" d="M1095,10 Q1295,148 1460,24" fill="none"/>
     </svg>
   </div>
 
@@ -25,11 +38,15 @@
   <div class="snow topright" id="snowTopRight" aria-hidden="true"></div>
 
   <button class="music-btn" id="musicBtn" aria-label="Play lofi radio" title="Lofi radio — ambient music" aria-pressed="false"></button>
+  <button class="theme-btn" id="themeBtn" aria-label="Enable pure black dark mode" title="Toggle pure black dark mode" aria-pressed="false"></button>
 
   <div class="page">
     <header class="masthead">
       <h1 class="site-title">Days to <span class="shine">2027<i class="sp sp1" aria-hidden="true"></i><i class="sp sp2" aria-hidden="true"></i><i class="sp sp3" aria-hidden="true"></i><i class="sp sp4" aria-hidden="true"></i><i class="sp sp5" aria-hidden="true"></i><i class="sp sp6" aria-hidden="true"></i></span></h1>
-      <p class="now-line" id="nowLine">&nbsp;</p>
+      <div class="now-pill">
+        <span class="live-dot" aria-hidden="true"></span>
+        <p class="now-line" id="nowLine">&nbsp;</p>
+      </div>
     </header>
 
     <main class="mid">
@@ -55,12 +72,22 @@
             <div class="unit-label">Seconds</div>
           </div>
         </div>
+        <div class="year-progress" aria-label="2026 progress">
+          <div class="yp-meta">
+            <span class="yp-label">2026</span>
+            <span class="yp-pct" id="yearPct">&nbsp;</span>
+            <span class="yp-label yp-target">2027</span>
+          </div>
+          <div class="yp-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="yearTrack">
+            <div class="yp-fill" id="yearFill"></div>
+          </div>
+        </div>
       </section>
 
       <section class="glass card-calendar" aria-label="Calendar">
         <div class="cal-head">
           <button class="cal-nav" id="calPrev" aria-label="Previous month">&lsaquo;</button>
-          <h2 class="cal-title" id="calTitle">&nbsp;</h2>
+          <h2 class="cal-title" id="calTitle" title="Jump to current month">&nbsp;</h2>
           <button class="cal-nav" id="calNext" aria-label="Next month">&rsaquo;</button>
         </div>
         <div class="cal-body">
@@ -72,7 +99,10 @@
       </section>
 
       <section class="glass card-pomodoro" aria-label="Pomodoro timer" id="pomoCard">
-        <p class="panel-label">Pomodoro</p>
+        <div class="pomo-head">
+          <p class="panel-label">Pomodoro</p>
+          <span class="pomo-status" id="pomoStatus">Ready</span>
+        </div>
         <div class="pomo-main">
           <div class="pomo-timer">
             <div class="pomo-display" id="pomoDisplay"></div>
@@ -90,6 +120,9 @@
           <button class="play-btn" id="pomoPlay" aria-label="Start timer"></button>
         </div>
         <p class="pomo-note" id="pomoNote" role="status" aria-live="polite"></p>
+        <div class="pomo-progress" aria-hidden="true">
+          <div class="pomo-progress-fill" id="pomoProgress"></div>
+        </div>
         <div class="pomo-foot">
           <p class="foot-label">Focused this year</p>
           <p class="foot-value"><span id="focusTotal">0 hrs</span><span class="foot-sessions" id="focusSessions"></span></p>
@@ -102,7 +135,7 @@
           <p class="todo-count" id="todoCount">&nbsp;</p>
         </div>
         <form class="todo-form" id="todoForm">
-          <input type="text" id="todoInput" placeholder="Add a task…" autocomplete="off" maxlength="200" aria-label="New task">
+          <input type="text" id="todoInput" placeholder="Add a task for 2026…" autocomplete="off" maxlength="200" aria-label="New task">
           <button type="submit" class="enter-btn" aria-label="Add task">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 5v6a4 4 0 0 1-4 4H5"/><path d="M9 11l-4 4 4 4"/></svg>
           </button>
@@ -115,6 +148,6 @@
     </main>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
