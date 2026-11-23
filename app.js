@@ -838,12 +838,12 @@ function buildLights() {
   if (!svg) return;
   const NS = 'http://www.w3.org/2000/svg';
   const palette = [
-    ['#EAF4FF', '#FFFFFF', '#7FB4E6'],  // crisp white-silver
-    ['#CFE7FF', '#FFFFFF', '#599CE0'],  // bright silver-blue
-    ['#FFFFFF', '#FFFFFF', '#98B8D8'],  // diamond white-silver
-    ['#5EB8FF', '#E2F3FF', '#287FD1'],  // vivid winter frost blue
-    ['#FF6B63', '#FFD6D4', '#C93832'],  // crisp festive ruby
-    ['#DFEEFC', '#FFFFFF', '#76A6D6'],  // cool pearl silver
+    ['#FF5B6B', '#FFD2D7', '#C2283A'],  // ruby coral
+    ['#FF9F4A', '#FFE0C2', '#C7651A'],  // warm tangerine
+    ['#42DF92', '#C2FCE0', '#1C9A5C'],  // emerald mint
+    ['#47D7F5', '#CCF6FF', '#1990AD'],  // frost cyan
+    ['#579BFF', '#D4E6FF', '#2768C7'],  // winter sky blue
+    ['#B97EFF', '#ECD8FF', '#7B42C4'],  // soft violet
   ];
   const counts = [7, 6, 6, 7, 6, 6];
   const rand = (min, max) => min + Math.random() * (max - min);
